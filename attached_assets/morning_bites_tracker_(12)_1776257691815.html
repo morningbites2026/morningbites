@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Morning Bites</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gd:#1a5c2a;--gm:#2d8a45;--amber:#f5c542;--t1:#1a1a1a;--t2:#555;--t3:#888;--r:14px;--rs:8px;--sh:0 1px 4px rgba(0,0,0,0.06);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans',sans-serif;background:#f0f4f0;color:var(--t1);min-height:100vh;padding-bottom:20px;}
+.app-header{background:linear-gradient(135deg,#1a5c2a,#2d8a45);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.logo-text h1{font-family:'Baloo 2',cursive;font-size:16px;font-weight:700;color:white;line-height:1;}
+.logo-text p{font-size:9px;color:rgba(255,255,255,0.75);}
+.hbadge{background:var(--amber);color:var(--gd);font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Baloo 2',cursive;}
+.conn{font-size:9px;padding:2px 6px;border-radius:8px;margin-top:2px;}
+.conn-ok{background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);}
+.conn-err{background:rgba(255,80,80,0.3);color:#ffcdd2;}
+.statbar{background:white;display:flex;border-bottom:1px solid #eee;}
+.si{flex:1;text-align:center;padding:5px 0;}
+.si:not(:last-child){border-right:1px solid #eee;}
+.sn{font-family:'Baloo 2',cursive;font-size:16px;font-weight:700;color:var(--gd);line-height:1;}
+.sl{font-size:8px;color:var(--t3);text-transform:uppercase;margin-top:1px;}
+.search-wrap{background:white;padding:8px 12px;border-bottom:1px solid #eee;position:sticky;top:58px;z-index:89;}
+.search-inner{display:flex;align-items:center;background:#f5f5f5;border-radius:10px;padding:0 10px;gap:7px;}
+.search-inner input{flex:1;border:none;background:none;padding:8px 0;font-size:13px;color:var(--t1);font-family:'Noto Sans',sans-serif;outline:none;}
+.search-inner input::placeholder{color:var(--t3);}
+.search-clear{font-size:14px;color:var(--t3);cursor:pointer;padding:3px;display:none;}
+.search-clear.show{display:block;}
+.tabs{background:white;display:flex;border-bottom:2px solid #f0f0f0;position:sticky;top:108px;z-index:88;overflow-x:auto;}
+.tb{flex-shrink:0;padding:9px 7px;font-size:10px;font-weight:500;color:var(--t3);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;}
+.tb.active{color:var(--gd);border-bottom-color:var(--gd);font-weight:700;}
+.content{padding:12px;}
+.card{background:white;border-radius:var(--r);padding:12px;margin-bottom:8px;box-shadow:var(--sh);border:1px solid #f0f0f0;animation:fi 0.2s ease;}
+.card.sw{border:1px solid #c8e6c9;}
+.card.cc{border:1px solid #ffcdd2;background:#fff8f8;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.crow{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.cname{font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;}
+.cphone{font-size:11px;color:var(--t3);margin-top:1px;}
+.ctags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;}
+.t-wi{background:#e3f2fd;color:#1565c0;}
+.t-sub{background:#e8f5e9;color:#1a5c2a;}
+.t-new{background:#e8f5e9;color:#2e7d32;}
+.t-r{background:#f3e5f5;color:#6a1b9a;}
+.t-pkg{background:#fff3e0;color:#e65100;}
+.t-cancelled{background:#ffcdd2;color:#b71c1c;}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.b-act{background:#e8f5e9;color:#1a5c2a;}
+.b-low{background:#fff3e0;color:#e65100;}
+.b-done{background:#f5f5f5;color:#999;}
+.b-cancel{background:#ffcdd2;color:#b71c1c;}
+/* DAYS */
+.week-nav{display:flex;align-items:center;gap:6px;margin:5px 0 3px;}
+.wnb{background:none;border:1.5px solid #ddd;border-radius:var(--rs);padding:2px 8px;font-size:13px;cursor:pointer;color:var(--gd);}
+.wlbl{font-size:10px;color:var(--t3);flex:1;text-align:center;}
+.days-wrap{display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap;}
+.day-col{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.day-date-lbl{font-size:9px;color:var(--t3);font-weight:600;}
+.day-btn{padding:3px 5px;border-radius:12px;font-size:10px;font-weight:600;border:1.5px solid #ddd;background:none;color:var(--t3);cursor:pointer;min-width:30px;text-align:center;}
+.day-btn.sel{background:var(--gd);color:white;border-color:var(--gd);}
+.day-btn.skipped{background:#ff9800;color:white;border-color:#ff9800;}
+/* FILTER */
+.filter-bar{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;}
+.filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid #ddd;background:none;color:var(--t2);cursor:pointer;white-space:nowrap;}
+.filter-btn.active{background:var(--gd);color:white;border-color:var(--gd);}
+/* PROG */
+.prog-wrap{margin-bottom:8px;}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-bottom:4px;}
+.prog-track{height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;transition:width 0.3s;}
+.fg{background:linear-gradient(90deg,#43a047,#66bb6a);}
+.fo{background:linear-gradient(90deg,#fb8c00,#ffa726);}
+.fgr{background:#bdbdbd;}
+/* BUTTONS */
+.acts{display:flex;gap:5px;flex-wrap:wrap;}
+.btn-use{background:var(--gd);color:white;border:none;padding:6px 10px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;}
+.btn-use:disabled{background:#ccc;cursor:not-allowed;}
+.btn-undo{background:#fff3e0;color:#e65100;border:1px solid #ffcc80;padding:6px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-undo:disabled{background:#f5f5f5;color:#ccc;border-color:#eee;cursor:not-allowed;}
+.btn-sm{background:none;color:var(--t2);border:1px solid #ddd;padding:5px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-sm:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-renew{background:#fff8e1;color:#e65100;border:1px solid #ffcc02;padding:5px 8px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;}
+.btn-renew:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-cancel-sub{background:#fff5f5;color:#b71c1c;border:1px solid #ffcdd2;padding:5px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-delete{background:#fff5f5;color:#b71c1c;border:1px solid #ffcdd2;padding:5px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-subscribe{background:#1565c0;color:white;border:none;padding:5px 9px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;}
+.btn-promote{background:#fff8e1;color:#e65100;border:1px solid #ffe082;padding:5px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-pa{background:var(--amber);color:var(--gd);border:none;padding:5px 10px;border-radius:var(--rs);font-size:11px;font-weight:700;cursor:pointer;}
+.btn-edit{background:none;color:var(--t2);border:1px solid #ddd;padding:5px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-add-top{width:100%;background:var(--gd);color:white;border:none;padding:10px;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;font-family:'Baloo 2',cursive;margin-bottom:10px;}
+.btn-skip{background:#fff3e0;color:#e65100;border:1px solid #ffcc80;padding:5px 8px;border-radius:var(--rs);font-size:11px;cursor:pointer;}
+.btn-green{flex:1;background:var(--gd);color:white;border:none;padding:11px;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;font-family:'Baloo 2',cursive;}
+.btn-green:disabled{background:#aaa;cursor:not-allowed;}
+.btn-wa{flex:1;background:#25d366;color:white;border:none;padding:11px;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;font-family:'Baloo 2',cursive;}
+.btn-cp{background:#f5f5f5;color:var(--t2);border:1px solid #ddd;padding:11px 12px;border-radius:var(--rs);font-size:12px;cursor:pointer;}
+.btn-cl{background:none;color:var(--t3);border:1px solid #eee;padding:11px 12px;border-radius:var(--rs);font-size:12px;cursor:pointer;}
+.btn-del-confirm{flex:1;background:#b71c1c;color:white;border:none;padding:11px;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;}
+.section-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.section-row h3{font-family:'Baloo 2',cursive;font-size:13px;font-weight:700;color:var(--gd);}
+/* DASHBOARD */
+.dash-card{background:white;border-radius:var(--r);padding:14px;margin-bottom:8px;box-shadow:var(--sh);}
+.dash-num{font-family:'Baloo 2',cursive;font-size:28px;font-weight:700;color:var(--gd);}
+.dash-lbl{font-size:11px;color:var(--t3);margin-top:2px;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.upcoming-card{background:white;border-radius:var(--r);padding:12px;margin-bottom:8px;box-shadow:var(--sh);}
+.upcoming-card.today{border-left:4px solid var(--gd);}
+.upcoming-card.tomorrow{border-left:4px solid #ff9800;}
+.udl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:3px;}
+.uname{font-family:'Baloo 2',cursive;font-size:14px;font-weight:700;}
+.uinfo{font-size:11px;color:var(--t3);margin-top:2px;}
+.week-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;}
+.wdc{background:white;border-radius:var(--rs);padding:10px;box-shadow:var(--sh);cursor:pointer;}
+.wdc.today-day{border:2px solid var(--gd);}
+.wdn{font-size:11px;font-weight:700;margin-bottom:2px;}
+.wdc-count{font-family:'Baloo 2',cursive;font-size:18px;font-weight:700;color:var(--gd);line-height:1;}
+.wdc-names{font-size:10px;color:var(--t3);margin-top:2px;}
+/* BILLING */
+.menu-section{background:white;border-radius:var(--r);padding:12px;margin-bottom:8px;box-shadow:var(--sh);}
+.mst{font-family:'Baloo 2',cursive;font-size:13px;font-weight:700;color:var(--gd);margin-bottom:8px;}
+.moi{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;}
+.moi:last-child{border-bottom:none;}
+.moi-name{font-size:13px;font-weight:600;}
+.moi-price{font-size:11px;color:var(--t3);}
+.qty-ctrl{display:flex;align-items:center;gap:8px;}
+.qty-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--gd);background:none;font-size:15px;cursor:pointer;color:var(--gd);font-weight:700;display:flex;align-items:center;justify-content:center;}
+.qty-num{font-size:13px;font-weight:700;min-width:18px;text-align:center;}
+.bill-total-bar{background:#e8f5e9;border-radius:var(--rs);padding:12px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.bill-amt-input{font-family:'Baloo 2',cursive;font-size:22px;font-weight:700;color:var(--gd);border:none;background:transparent;width:120px;text-align:right;outline:none;}
+/* CASH CHANGE */
+.cash-box{background:#fff8e1;border-radius:var(--rs);padding:10px;margin-top:6px;}
+.cash-box label{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;display:block;margin-bottom:6px;}
+.cash-row{display:flex;align-items:center;gap:8px;}
+.cash-inp{flex:1;padding:8px 10px;font-size:14px;border:1.5px solid #ffe082;border-radius:var(--rs);background:white;font-family:'Noto Sans',sans-serif;}
+.change-display{text-align:right;}
+.change-lbl{font-size:10px;color:var(--t3);}
+.change-amt{font-family:'Baloo 2',cursive;font-size:20px;font-weight:700;color:#e65100;}
+/* REPORTS */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sum-card{background:white;border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--sh);}
+.snum{font-family:'Baloo 2',cursive;font-size:22px;font-weight:700;color:var(--gd);line-height:1;}
+.slbl{font-size:10px;color:var(--t3);margin-top:3px;}
+.sec-head{font-family:'Baloo 2',cursive;font-size:12px;font-weight:700;color:var(--gd);margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.5px;}
+.period-tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.ptab{padding:6px 10px;font-size:11px;font-weight:600;border-radius:var(--rs);border:1.5px solid #ddd;background:none;cursor:pointer;color:var(--t2);}
+.ptab.active{background:var(--gd);color:white;border-color:var(--gd);}
+.inner-tabs{display:flex;gap:5px;margin-bottom:10px;}
+.itab{flex:1;padding:6px;font-size:11px;font-weight:600;border-radius:var(--rs);border:1.5px solid #ddd;background:none;cursor:pointer;color:var(--t2);}
+.itab.active{background:var(--gd);color:white;border-color:var(--gd);}
+/* MENU ADMIN */
+.menu-admin-item{background:white;border-radius:var(--r);padding:12px;margin-bottom:8px;box-shadow:var(--sh);border:1px solid #f0f0f0;}
+.menu-toggle{position:relative;display:inline-flex;width:36px;height:20px;cursor:pointer;}
+.ti{opacity:0;width:0;height:0;position:absolute;}
+.tt{position:absolute;inset:0;background:#ccc;border-radius:10px;transition:0.3s;}
+.ti:checked+.tt{background:var(--gd);}
+.th{position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:2px;left:2px;transition:0.3s;pointer-events:none;}
+.ti:checked~.th{left:18px;}
+.order-inp{width:44px;padding:4px 6px;font-size:12px;border:1.5px solid #ddd;border-radius:var(--rs);text-align:center;}
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:white;border-radius:var(--r) var(--r) 0 0;padding:18px;width:100%;max-width:500px;animation:su 0.25s ease;max-height:90vh;overflow-y:auto;}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;color:var(--gd);margin-bottom:12px;}
+.modal h3.danger{color:#b71c1c;}
+.mtabs{display:flex;gap:5px;margin-bottom:10px;}
+.mtab{flex:1;padding:7px;font-size:11px;font-weight:600;border-radius:var(--rs);border:1.5px solid #e0e0e0;background:none;cursor:pointer;color:var(--t2);}
+.mtab.active{background:var(--gd);color:white;border-color:var(--gd);}
+.msgbox{background:#f9f9f9;border:1px solid #e0e0e0;border-radius:var(--rs);padding:10px;font-size:12px;line-height:1.6;color:var(--t1);margin-bottom:10px;white-space:pre-wrap;max-height:180px;overflow-y:auto;}
+.macts{display:flex;gap:7px;}
+.fg-grp{margin-bottom:10px;}
+.fg-grp label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
+.fg-grp input,.fg-grp select,.fg-grp textarea{width:100%;padding:10px 12px;font-size:13px;border:1.5px solid #e0e0e0;border-radius:var(--rs);background:#fafafa;color:var(--t1);font-family:'Noto Sans',sans-serif;-webkit-appearance:none;}
+.fg-grp textarea{resize:vertical;min-height:55px;}
+.fg-grp input:focus,.fg-grp select:focus,.fg-grp textarea:focus{outline:none;border-color:var(--gm);background:white;}
+.info-box{background:#e8f5e9;border-radius:var(--rs);padding:10px;font-size:12px;color:#1a5c2a;margin-bottom:12px;}
+.warn-box{background:#fff3e0;border-radius:var(--rs);padding:10px;font-size:12px;color:#e65100;margin-bottom:12px;}
+.danger-box{background:#fff5f5;border:1px solid #ffcdd2;border-radius:var(--rs);padding:12px;font-size:12px;color:#b71c1c;margin-bottom:14px;line-height:1.6;}
+.audit-pack-head{font-size:12px;font-weight:700;color:var(--gd);margin:10px 0 5px;padding-bottom:4px;border-bottom:2px solid #e8f5e9;}
+.audit-pack-head.cc{color:#b71c1c;border-bottom-color:#ffcdd2;}
+.audit-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;}
+.audit-time{color:var(--t3);font-size:10px;}
+.skip-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:12px;}
+.ebi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5;}
+.ebi:last-child{border-bottom:none;}
+.ebi-name{flex:1;font-size:12px;color:var(--t2);}
+.eqi{width:44px;padding:4px 6px;font-size:12px;border:1.5px solid #ddd;border-radius:var(--rs);text-align:center;}
+.epi{width:60px;padding:4px 6px;font-size:12px;border:1.5px solid #ddd;border-radius:var(--rs);text-align:center;}
+/* LOADER */
+.btn-loading{position:relative;pointer-events:none;opacity:0.7;}
+.btn-loading::after{content:'';position:absolute;right:8px;top:50%;transform:translateY(-50%);width:12px;height:12px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.6s linear infinite;}
+.no-results{text-align:center;padding:20px;color:var(--t3);font-size:13px;}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:white;padding:8px 16px;border-radius:16px;font-size:12px;z-index:300;display:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.loading{text-align:center;padding:30px;color:var(--t3);font-size:13px;}
+.spinner{width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:var(--gd);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:24px 16px;color:var(--t3);}
+.empty-icon{font-size:28px;margin-bottom:8px;}
+.empty p{font-size:13px;}
+mark{background:#fff176;color:var(--t1);border-radius:2px;padding:0 1px;}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <div class="logo">
+    <div class="logo-icon">🌿</div>
+    <div class="logo-text"><h1>Morning Bites</h1><p>Sprouts Tracker</p></div>
+  </div>
+  <div style="text-align:right;">
+    <div class="hbadge" id="hbadge-pkg">🌿 Morning Bites</div>
+    <div id="conn-status" class="conn conn-ok">⚡ Connecting...</div>
+  </div>
+</div>
+<div class="statbar">
+  <div class="si"><div class="sn" id="st-walkin">0</div><div class="sl">Walk-ins</div></div>
+  <div class="si"><div class="sn" id="st-sub">0</div><div class="sl">Subscribed</div></div>
+  <div class="si"><div class="sn" id="st-low">0</div><div class="sl">Low meals</div></div>
+  <div class="si"><div class="sn" id="st-done">0</div><div class="sl">Pack done</div></div>
+</div>
+<div class="search-wrap">
+  <div class="search-inner">
+    <span style="font-size:13px;color:var(--t3);">🔍</span>
+    <input type="text" id="search-input" placeholder="Search by name or phone..." oninput="onSearch(this.value)"/>
+    <span class="search-clear" id="search-clear" onclick="clearSearch()">✕</span>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tb active" onclick="switchTab('dashboard')">🏠 Dashboard</button>
+  <button class="tb" onclick="switchTab('billing')">🧾 Billing</button>
+  <button class="tb" onclick="switchTab('bill-reports')">📊 Bill Reports</button>
+  <button class="tb" onclick="switchTab('sub-dashboard')">📅 Sub Dashboard</button>
+  <button class="tb" onclick="switchTab('walkins')">🚶 Walk-ins</button>
+  <button class="tb" onclick="switchTab('subscribed')">🌿 Subscribed</button>
+  <button class="tb" onclick="switchTab('sub-reports')">📈 Sub Reports</button>
+  <button class="tb" onclick="switchTab('packages')">📦 Packages</button>
+  <button class="tb" onclick="switchTab('menu')">🍽️ Menu</button>
+</div>
+
+<!-- GENERAL DASHBOARD -->
+<div id="tab-dashboard" class="content">
+  <div id="dash-content"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+</div>
+
+<!-- BILLING TAB -->
+<div id="tab-billing" class="content" style="display:none;">
+  <div class="card" style="margin-bottom:10px;">
+    <div style="font-family:'Baloo 2',cursive;font-size:14px;font-weight:700;color:var(--gd);margin-bottom:10px;">🧾 New Bill</div>
+    <div class="fg-grp"><label>Customer Name (Optional)</label><input type="text" id="bill-name" placeholder="Walk-in or name" autocomplete="off"/></div>
+    <div id="menu-order-list"><div class="loading"><div class="spinner"></div>Loading menu...</div></div>
+    <div class="bill-total-bar"><span>Total Amount</span><input class="bill-amt-input" type="number" id="bill-total-amt" value="0" min="0"/></div>
+    <div class="fg-grp"><label>Payment Mode</label>
+      <select id="bill-payment" onchange="onPayModeChange()">
+        <option value="cash">💵 Cash</option>
+        <option value="upi">📱 UPI</option>
+        <option value="scanpay">📷 Scan &amp; Pay (QR)</option>
+      </select>
+    </div>
+    <div id="cash-box" style="display:none;" class="cash-box">
+      <label>Cash Received by Customer</label>
+      <div class="cash-row">
+        <input type="number" class="cash-inp" id="cash-received" placeholder="Amount received" oninput="calcChange()"/>
+        <div class="change-display"><div class="change-lbl">Return to customer</div><div class="change-amt" id="change-amt">₹0</div></div>
+      </div>
+    </div>
+    <div class="fg-grp" style="margin-top:10px;"><label>Notes (Optional)</label><textarea id="bill-notes" placeholder="Any notes, discounts..."></textarea></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn-green" id="btn-gen-bill" onclick="generateBill()">✅ Generate Bill</button>
+      <button class="btn-cl" onclick="clearBillForm()">🗑️ Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- BILL REPORTS TAB -->
+<div id="tab-bill-reports" class="content" style="display:none;">
+  <div class="period-tabs">
+    <button class="ptab active" onclick="setBillPeriod('day')">Today</button>
+    <button class="ptab" onclick="setBillPeriod('week')">This Week</button>
+    <button class="ptab" onclick="setBillPeriod('month')">This Month</button>
+    <button class="ptab" onclick="setBillPeriod('range')">📅 Range</button>
+  </div>
+  <div id="date-range-wrap" style="display:none;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:120px;"><label style="font-size:10px;font-weight:600;color:var(--t2);display:block;margin-bottom:3px;">FROM</label><input type="date" id="range-from" style="width:100%;padding:7px 10px;font-size:12px;border:1.5px solid #ddd;border-radius:var(--rs);background:#fafafa;" onchange="renderBillReports()"/></div>
+    <div style="flex:1;min-width:120px;"><label style="font-size:10px;font-weight:600;color:var(--t2);display:block;margin-bottom:3px;">TO</label><input type="date" id="range-to" style="width:100%;padding:7px 10px;font-size:12px;border:1.5px solid #ddd;border-radius:var(--rs);background:#fafafa;" onchange="renderBillReports()"/></div>
+  </div>
+  <div class="inner-tabs">
+    <button class="itab active" onclick="setBillView('summary')">Summary</button>
+    <button class="itab" onclick="setBillView('history')">History</button>
+  </div>
+  <div id="bill-reports-content"></div>
+</div>
+
+<!-- SUB DASHBOARD TAB -->
+<div id="tab-sub-dashboard" class="content" style="display:none;">
+  <div id="sub-dash-content"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+</div>
+
+<!-- WALK-INS TAB -->
+<div id="tab-walkins" class="content" style="display:none;">
+  <button class="btn-add-top" onclick="openAddWalkin()">+ Add Walk-in Customer</button>
+  <div class="section-row"><h3 id="walkin-count">Walk-ins</h3><button class="btn-pa" onclick="promoteAll()">📢 Promote All</button></div>
+  <div id="walkin-list"></div>
+</div>
+
+<!-- SUBSCRIBED TAB -->
+<div id="tab-subscribed" class="content" style="display:none;">
+  <button class="btn-add-top" onclick="openAddSubscribed()">+ Add &amp; Activate Subscription</button>
+  <div class="filter-bar" id="sub-filter-bar">
+    <button class="filter-btn active" onclick="setSubFilter('all')">All</button>
+    <button class="filter-btn" onclick="setSubFilter('active')">Active</button>
+    <button class="filter-btn" onclick="setSubFilter('low')">⚠️ Low</button>
+    <button class="filter-btn" onclick="setSubFilter('done')">Pack done</button>
+    <button class="filter-btn" onclick="setSubFilter('new')">🆕 New</button>
+    <button class="filter-btn" onclick="setSubFilter('renewed')">🔄 Renewed</button>
+  </div>
+  <div id="subscribed-list"></div>
+</div>
+
+<!-- SUB REPORTS TAB -->
+<div id="tab-sub-reports" class="content" style="display:none;">
+  <div class="sum-grid">
+    <div class="sum-card"><div class="snum" id="sr-total">0</div><div class="slbl">Total subscribed</div></div>
+    <div class="sum-card"><div class="snum" id="sr-active">0</div><div class="slbl">Active packs</div></div>
+    <div class="sum-card"><div class="snum" id="sr-meals">0</div><div class="slbl">Meals served</div></div>
+    <div class="sum-card"><div class="snum" id="sr-rev">₹0</div><div class="slbl">Total sub rev.</div></div>
+    <div class="sum-card"><div class="snum" id="sr-cash">₹0</div><div class="slbl">💵 Cash</div></div>
+    <div class="sum-card"><div class="snum" id="sr-upi">₹0</div><div class="slbl">📱 UPI</div></div>
+    <div class="sum-card"><div class="snum" id="sr-qr">₹0</div><div class="slbl">📷 Scan & Pay</div></div>
+  </div>
+  <div class="sec-head">⚠️ Renewal Alerts</div><div id="sr-renewals"></div>
+  <div class="sec-head">🆕 New Customers</div><div id="sr-new"></div>
+  <div class="sec-head">🔄 Renewed</div><div id="sr-renewed"></div>
+  <div class="sec-head">❌ Cancelled</div><div id="sr-cancelled"></div>
+</div>
+
+<!-- PACKAGES TAB -->
+<div id="tab-packages" class="content" style="display:none;">
+  <button class="btn-add-top" onclick="openAddPackage()">+ Add Package</button>
+  <div id="packages-list"></div>
+</div>
+
+<!-- MENU TAB -->
+<div id="tab-menu" class="content" style="display:none;">
+  <button class="btn-add-top" onclick="openAddMenuItem()">+ Add Menu Item</button>
+  <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Set order number to reorder</div>
+  <div id="menu-admin-list"></div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="modal-notify">
+  <div class="modal"><h3>📩 Send Notification</h3>
+    <div class="mtabs"><button class="mtab active" onclick="setMsgType('update')">Meal Update</button><button class="mtab" onclick="setMsgType('renew')">Renew Pack</button><button class="mtab" onclick="setMsgType('done')">Pack Done</button></div>
+    <div class="msgbox" id="notify-msg"></div>
+    <div class="macts"><button class="btn-wa" onclick="sendNotifyWA()">💬 Send WhatsApp</button><button class="btn-cp" onclick="copyNotify()">📋 Copy</button><button class="btn-cl" onclick="closeModals()">✕</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-promo">
+  <div class="modal"><h3>📢 Promotion Message</h3>
+    <div class="msgbox" id="promo-msg"></div>
+    <div class="macts"><button class="btn-wa" onclick="sendPromoWA()">💬 Send WhatsApp</button><button class="btn-cp" onclick="copyPromo()">📋 Copy</button><button class="btn-cl" onclick="closeModals()">✕</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-subscribe">
+  <div class="modal"><h3>✅ Activate Subscription</h3>
+    <div class="info-box" id="sub-modal-info"></div>
+    <div class="fg-grp"><label>Select Package</label><select id="sub-pkg-select"></select></div>
+    <div class="fg-grp"><label>Payment Mode</label>
+      <select id="sub-payment" onchange="onSubPayChange()">
+        <option value="cash">💵 Cash</option>
+        <option value="upi">📱 UPI</option>
+        <option value="scanpay">📷 Scan &amp; Pay (QR)</option>
+      </select>
+    </div>
+    <div id="sub-cash-box" style="display:none;" class="cash-box">
+      <label>Cash Received</label>
+      <div class="cash-row">
+        <input type="number" class="cash-inp" id="sub-cash-received" placeholder="Amount received" oninput="calcSubChange()"/>
+        <div class="change-display"><div class="change-lbl">Return to customer</div><div class="change-amt" id="sub-change-amt">₹0</div></div>
+      </div>
+    </div>
+    <div class="macts" style="margin-top:8px;"><button class="btn-green" id="btn-confirm-sub" onclick="confirmSubscribe()">✅ Activate &amp; Send Welcome</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-addwalkin">
+  <div class="modal"><h3>🚶 Add Walk-in Customer</h3>
+    <div class="fg-grp"><label>Name</label><input type="text" id="wi-name" placeholder="Customer name" autocomplete="off"/></div>
+    <div class="fg-grp"><label>Phone Number</label><input type="tel" id="wi-phone" placeholder="9099172237" autocomplete="off"/></div>
+    <div class="macts"><button class="btn-green" id="btn-save-walkin" onclick="saveWalkin()">+ Add Walk-in</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-addsub">
+  <div class="modal"><h3>🌿 Activate Subscription</h3>
+    <div class="info-box">✅ Added to Walk-in list · 💬 Welcome message sent</div>
+    <div class="fg-grp"><label>Customer Name</label><input type="text" id="as-name" placeholder="e.g. Rahul Shah" autocomplete="off"/></div>
+    <div class="fg-grp"><label>Phone Number</label><input type="tel" id="as-phone" placeholder="9099172237" autocomplete="off"/></div>
+    <div class="fg-grp"><label>Select Package</label><select id="as-pkg-select"></select></div>
+    <div class="fg-grp"><label>Payment Mode</label>
+      <select id="as-payment" onchange="onAsPayChange()">
+        <option value="cash">💵 Cash</option>
+        <option value="upi">📱 UPI</option>
+        <option value="scanpay">📷 Scan &amp; Pay (QR)</option>
+      </select>
+    </div>
+    <div id="as-cash-box" style="display:none;" class="cash-box">
+      <label>Cash Received</label>
+      <div class="cash-row">
+        <input type="number" class="cash-inp" id="as-cash-received" placeholder="Amount received" oninput="calcAsChange()"/>
+        <div class="change-display"><div class="change-lbl">Return</div><div class="change-amt" id="as-change-amt">₹0</div></div>
+      </div>
+    </div>
+    <div class="macts" style="margin-top:8px;"><button class="btn-green" id="btn-confirm-addsub" onclick="confirmAddSubscribed()">✅ Activate &amp; Send Welcome</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-edit-customer">
+  <div class="modal"><h3>✏️ Edit Customer</h3>
+    <div class="info-box">Changes sync across all lists.</div>
+    <div class="fg-grp"><label>Name</label><input type="text" id="edit-name" autocomplete="off"/></div>
+    <div class="fg-grp"><label>Phone</label><input type="tel" id="edit-phone" autocomplete="off"/></div>
+    <div class="macts"><button class="btn-green" onclick="saveEditCustomer()">💾 Save</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-cancel-sub">
+  <div class="modal"><h3>❌ Cancel Subscription</h3>
+    <div class="warn-box" id="cancel-info"></div>
+    <p style="font-size:12px;color:var(--t2);margin-bottom:14px;">History preserved. Can re-subscribe anytime.</p>
+    <div class="macts"><button class="btn-cancel-sub" style="flex:1;" onclick="confirmCancelSub()">❌ Yes, Cancel</button><button class="btn-cl" onclick="closeModals()">Keep Active</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-delete">
+  <div class="modal"><h3 class="danger">🗑️ Remove Customer</h3>
+    <div class="danger-box">⚠️ <strong>Warning!</strong><br><br>• Subscription cancelled<br>• Removed from all lists<br>• History hidden<br><br><strong>Data kept in database safely.</strong></div>
+    <div id="del-cname" style="font-family:'Baloo 2',cursive;font-size:14px;font-weight:700;color:#b71c1c;margin-bottom:14px;"></div>
+    <div class="macts"><button class="btn-del-confirm" onclick="confirmDelete()">🗑️ Yes, Remove</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-welcome">
+  <div class="modal"><h3>🎉 Welcome Message</h3>
+    <div class="msgbox" id="welcome-msg"></div>
+    <div class="macts"><button class="btn-wa" onclick="sendWelcomeWA()">💬 Send WhatsApp</button><button class="btn-cp" onclick="copyWelcome()">📋 Copy</button><button class="btn-cl" onclick="closeModals()">✕</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-audit">
+  <div class="modal"><h3>📋 History — <span id="audit-cname"></span></h3>
+    <div id="audit-body"></div>
+    <div class="macts" style="margin-top:12px;"><button class="btn-cl" style="flex:1;" onclick="closeModals()">Close</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-edit-bill">
+  <div class="modal"><h3>✏️ Edit Bill</h3>
+    <div class="fg-grp"><label>Customer Name</label><input type="text" id="edit-bill-name" autocomplete="off"/></div>
+    <div class="fg-grp"><label>Payment Mode</label>
+      <select id="edit-bill-payment"><option value="cash">💵 Cash</option><option value="upi">📱 UPI</option><option value="scanpay">📷 Scan &amp; Pay</option></select>
+    </div>
+    <div class="sec-head" style="margin-top:4px;">Existing Items</div>
+    <div id="edit-bill-items-wrap"></div>
+    <div class="sec-head" style="margin-top:8px;">Add New Items</div>
+    <div id="edit-bill-add-items"></div>
+    <div style="margin:10px 0;display:flex;justify-content:space-between;align-items:center;background:#e8f5e9;padding:10px;border-radius:var(--rs);">
+      <span style="font-size:13px;font-weight:600;color:var(--gd);">Total</span>
+      <input type="number" id="edit-bill-total" style="width:90px;font-size:16px;font-weight:700;color:var(--gd);border:1.5px solid #c8e6c9;border-radius:var(--rs);padding:4px 8px;text-align:right;background:white;"/>
+    </div>
+    <div class="macts"><button class="btn-green" onclick="saveEditBill()">💾 Save</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-qr">
+  <div class="modal" style="text-align:center;">
+    <h3>📷 Scan &amp; Pay</h3>
+    <div id="qr-modal-body"></div>
+    <div style="margin-top:14px;display:flex;gap:8px;">
+      <button class="btn-green" onclick="confirmQRDone()">✅ Payment Done</button>
+      <button class="btn-cl" onclick="changeQRPayMode()">↩ Change Mode</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="modal-share-report">
+  <div class="modal"><h3>📤 Share Report</h3>
+    <div class="msgbox" id="share-report-msg"></div>
+    <div class="macts"><button class="btn-wa" onclick="sendReportWA()">💬 Send WhatsApp</button><button class="btn-cp" onclick="copyReport()">📋 Copy</button><button class="btn-cl" onclick="closeModals()">✕</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-skip">
+  <div class="modal"><h3>⏭️ Skip Pack</h3>
+    <div class="info-box" id="skip-info"></div>
+    <div class="fg-grp"><label>Skip Date</label><input type="date" id="skip-date" oninput="updateSkipPreview()"/></div>
+    <div class="msgbox" id="skip-msg-preview" style="max-height:120px;font-size:11px;"></div>
+    <div class="macts"><button class="btn-wa" id="btn-skip-send" onclick="confirmSkip()">✅ Skip &amp; Send WhatsApp</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-day-customers">
+  <div class="modal"><h3 id="day-modal-title">📅 Customers</h3>
+    <div id="day-cust-body"></div>
+    <div class="sec-head" style="margin-top:12px;">⏭️ Skipped</div>
+    <div id="day-skip-body"></div>
+    <div class="macts" style="margin-top:12px;"><button class="btn-cl" style="flex:1;" onclick="closeModals()">Close</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-manage-skips">
+  <div class="modal"><h3>⏭️ Skips — <span id="ms-cname"></span></h3>
+    <div id="ms-body"></div>
+    <div class="macts" style="margin-top:12px;"><button class="btn-cl" style="flex:1;" onclick="closeModals()">Close</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-add-pkg">
+  <div class="modal"><h3>📦 Add Package</h3>
+    <div class="fg-grp"><label>Package Name</label><input type="text" id="pkg-name" placeholder="e.g. Sprouts Salad" autocomplete="off"/></div>
+    <div class="fg-grp"><label>Description (Optional)</label><textarea id="pkg-desc" placeholder="Package description..."></textarea></div>
+    <div class="fg-grp"><label>Price (₹)</label><input type="number" id="pkg-price" placeholder="350" autocomplete="off"/></div>
+    <div class="macts"><button class="btn-green" onclick="savePackage()">✅ Add Package</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-add-menu">
+  <div class="modal"><h3>🍽️ Add Menu Item</h3>
+    <div class="fg-grp"><label>Item Name</label><input type="text" id="mi-name" placeholder="e.g. Sprouts Bhel" autocomplete="off"/></div>
+    <div id="mi-options-wrap"></div>
+    <button class="btn-sm" style="width:100%;margin-bottom:10px;" onclick="addMenuOptField('mi')">+ Add Option</button>
+    <div class="macts"><button class="btn-green" onclick="saveMenuItem()">✅ Add Item</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-edit-menu">
+  <div class="modal"><h3>✏️ Edit Menu Item</h3>
+    <div class="fg-grp"><label>Item Name</label><input type="text" id="emi-name" autocomplete="off"/></div>
+    <div id="emi-options-wrap"></div>
+    <button class="btn-sm" style="width:100%;margin-bottom:10px;" onclick="addMenuOptField('emi')">+ Add Option</button>
+    <div class="macts"><button class="btn-green" onclick="saveEditMenuItem()">💾 Save</button><button class="btn-cl" onclick="closeModals()">Cancel</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB='https://qootbuuopygueiyxbwfm.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb3RidXVvcHlndWVpeXhid2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3ODgzODAsImV4cCI6MjA5MTM2NDM4MH0.TontN_KzMi-0_dy25FYjcO0TansxLdyrbcDZfhxD4Ks';
+const UPI_ID='mansisheth174-1@oksbi';
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYNAMES=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+let customers=[],walkins=[],menuItems=[],billsData=[],allSkips=[],packages=[];
+let notifyPhone='',notifyMsgs={},notifyType='update';
+let promoPhone='',promoMsgTxt='';
+let subWalkinId=null,editCustId=null,editCustType=null;
+let welcomePhone='',welcomeMsgTxt='';
+let cancelSubId=null,deleteId=null,deleteType=null,skipCustId=null;
+let searchQ='',currentTab='dashboard',billPeriod='day',billView='summary';
+let subFilter='all';
+let billQtys={},editBillNewQtys={},editBillId=null;
+let miOptCnt=0,emiOptCnt=0,editMenuId=null;
+let shareReportTxt='';
+let custWeekOffsets={};
+let pendingBillData=null; // for QR modal
+let dayModalIdx=null;
+
+function h(ex){return Object.assign({'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},ex||{});}
+async function dbGet(tbl,q){const r=await fetch(`${SB}/rest/v1/${tbl}?${q||'select=*'}&order=created_at.desc`,{headers:h()});const t=await r.text();if(!r.ok)throw new Error(t);return JSON.parse(t);}
+async function dbIns(tbl,data){const r=await fetch(`${SB}/rest/v1/${tbl}`,{method:'POST',headers:h({'Prefer':'return=representation'}),body:JSON.stringify(data)});const t=await r.text();if(!r.ok)throw new Error(t);return JSON.parse(t);}
+async function dbUpd(tbl,id,data){const r=await fetch(`${SB}/rest/v1/${tbl}?id=eq.${id}`,{method:'PATCH',headers:h({'Prefer':'return=minimal'}),body:JSON.stringify(data)});if(!r.ok){const t=await r.text();throw new Error(t);}}
+async function dbDel(tbl,id){const r=await fetch(`${SB}/rest/v1/${tbl}?id=eq.${id}`,{method:'DELETE',headers:h()});if(!r.ok){const t=await r.text();throw new Error(t);}}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function todayStr(){return new Date().toLocaleDateString('en-IN');}
+function todayISO(){const d=new Date();return isoDate(d);}
+function isoDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function getDayIdx(date){return (new Date(date+'T00:00:00').getDay()+6)%7;}
+function todayIdx(){return (new Date().getDay()+6)%7;}
+function getWeekDates(offset){const now=new Date();const dow=(now.getDay()+6)%7;const mon=new Date(now);mon.setDate(now.getDate()-dow+offset*7);return Array.from({length:6},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return isoDate(d);});}
+function fmtDate(iso){const p=iso.split('-');return p[2]+'/'+p[1];}
+function pmLabel(pm){return pm==='cash'?'💵 Cash':pm==='scanpay'?'📷 Scan & Pay':'📱 UPI';}
+
+function onSearch(v){searchQ=v.trim().toLowerCase();document.getElementById('search-clear').classList.toggle('show',!!searchQ);if(currentTab==='walkins')renderWalkins();if(currentTab==='subscribed')renderSubscribed();}
+function clearSearch(){document.getElementById('search-input').value='';searchQ='';document.getElementById('search-clear').classList.remove('show');if(currentTab==='walkins')renderWalkins();if(currentTab==='subscribed')renderSubscribed();}
+function matchSearch(c){if(!searchQ)return true;return (c.name||'').toLowerCase().includes(searchQ)||(c.phone||'').includes(searchQ);}
+function highlight(text,q){if(!q)return esc(text);const safe=esc(text);const safeQ=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return safe.replace(new RegExp(safeQ,'gi'),m=>`<mark>${m}</mark>`);}
+
+function setBtnLoading(id,loading){const b=document.getElementById(id);if(!b)return;if(loading){b.classList.add('btn-loading');b.disabled=true;}else{b.classList.remove('btn-loading');b.disabled=false;}}
+
+async function loadAll(){
+  try{
+    [customers,walkins,menuItems,billsData,allSkips,packages]=await Promise.all([
+      dbGet('customers','select=*&is_deleted=eq.false'),
+      dbGet('walkins','select=*&is_deleted=eq.false'),
+      dbGet('menu_items','select=*&order=sort_order.asc'),
+      dbGet('bills','select=*'),
+      dbGet('meal_skips','select=*&unskipped=eq.false'),
+      dbGet('packages','select=*&is_active=eq.true&order=created_at.asc')
+    ]);
+    document.getElementById('conn-status').textContent='✅ Connected';
+    document.getElementById('conn-status').className='conn conn-ok';
+    updateStats();
+    const renders={dashboard:renderDashboard,billing:renderBillingMenu,'bill-reports':renderBillReports,'sub-dashboard':renderSubDashboard,walkins:renderWalkins,subscribed:renderSubscribed,'sub-reports':renderSubReports,packages:renderPackages,menu:renderMenuAdmin};
+    if(renders[currentTab])renders[currentTab]();
+  }catch(e){
+    document.getElementById('conn-status').textContent='❌ Error';
+    document.getElementById('conn-status').className='conn conn-err';
+    toast('Error: '+e.message);
+  }
+}
+
+function updateStats(){
+  const active=customers.filter(c=>c.status==='active');
+  document.getElementById('st-walkin').textContent=walkins.length;
+  document.getElementById('st-sub').textContent=active.length;
+  document.getElementById('st-low').textContent=active.filter(c=>{const l=c.total-c.used;return l>0&&l<=2;}).length;
+  document.getElementById('st-done').textContent=active.filter(c=>c.used>=c.total).length;
+}
+
+function getPkgName(c){const p=packages.find(x=>x.id==c.package_id);return p?p.name:'Sprouts Salad';}
+
+// ─── GENERAL DASHBOARD ───
+function renderDashboard(){
+  const el=document.getElementById('dash-content');
+  const active=customers.filter(c=>c.status==='active');
+  const totalMeals=active.reduce((s,c)=>s+c.used,0);
+  const subRev=active.reduce((s,c)=>s+(((c.renew_count||0)+1)*(packages.find(p=>p.id==c.package_id)?.price||350)),0);
+  const todayBills=billsData.filter(b=>b.bill_date===todayStr());
+  const billRev=todayBills.reduce((s,b)=>s+b.total_amount,0);
+  const alerts=active.filter(c=>(c.total-c.used)<=2);
+  const tIdx=todayIdx();
+  const todayCusts=active.filter(c=>scheduledFor(c,tIdx));
+  const weekDates=getWeekDates(0);
+  const todaySkippedIds=new Set(allSkips.filter(s=>s.skip_date===todayISO()).map(s=>s.customer_id));
+  const todayReady=todayCusts.filter(c=>!todaySkippedIds.has(c.id));
+
+  let html=`
+  <div style="font-family:'Baloo 2',cursive;font-size:16px;font-weight:700;color:var(--gd);margin-bottom:10px;">🌿 ${DAYNAMES[tIdx]}, ${todayStr()}</div>
+  <div class="dash-grid">
+    <div class="dash-card"><div class="dash-num">${active.length}</div><div class="dash-lbl">Active subscriptions</div></div>
+    <div class="dash-card"><div class="dash-num">${todayReady.length}</div><div class="dash-lbl">Packs today</div></div>
+    <div class="dash-card"><div class="dash-num">${walkins.length}</div><div class="dash-lbl">Today's walk-ins</div></div>
+    <div class="dash-card"><div class="dash-num">${todayBills.length}</div><div class="dash-lbl">Bills today</div></div>
+    <div class="dash-card"><div class="dash-num">₹${billRev.toLocaleString('en-IN')}</div><div class="dash-lbl">Billing revenue today</div></div>
+    <div class="dash-card"><div class="dash-num">₹${subRev.toLocaleString('en-IN')}</div><div class="dash-lbl">Total sub revenue</div></div>
+    <div class="dash-card"><div class="dash-num">${totalMeals}</div><div class="dash-lbl">Total meals served</div></div>
+    <div class="dash-card"><div class="dash-num">${alerts.length}</div><div class="dash-lbl">⚠️ Renewal alerts</div></div>
+  </div>`;
+
+  if(alerts.length){
+    html+=`<div class="sec-head">⚠️ Renewal Alerts</div>`;
+    html+=alerts.slice(0,3).map(c=>{const left=c.total-c.used;return `<div class="card"><div class="crow"><div><div class="cname">${esc(c.name)}</div><div class="cphone">📞 ${esc(c.phone)}</div></div><span class="badge ${left<=0?'b-done':'b-low'}">${left<=0?'Pack done':left+' left'}</span></div></div>`;}).join('');
+  }
+
+  html+=`<div class="sec-head">📦 Today's Packs (${todayReady.length})</div>`;
+  if(todayReady.length){html+=todayReady.slice(0,5).map(c=>`<div class="upcoming-card today"><div class="udl">TODAY</div><div class="uname">${esc(c.name)}</div><div class="uinfo">📞 ${esc(c.phone)} · ${c.total-c.used} meals left · ${getPkgName(c)}</div></div>`).join('');}
+  else{html+=`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">${tIdx===6?'Sunday — stall closed 🌿':'No packs today.'}</div>`;}
+
+  html+=`<div class="sec-head">📊 Package Breakdown</div><div class="dash-grid">`;
+  packages.forEach(pkg=>{const cnt=active.filter(c=>c.package_id==pkg.id||(pkg.name==='Sprouts Salad'&&!c.package_id)).length;html+=`<div class="dash-card"><div class="dash-num">${cnt}</div><div class="dash-lbl">${esc(pkg.name)}</div></div>`;});
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+// ─── SUB DASHBOARD ───
+function scheduledFor(c,dayIdx){if(dayIdx===6)return false;const d=(c.preferred_days||[]).map(Number);return d.length===0||d.includes(dayIdx);}
+function renderSubDashboard(){
+  const el=document.getElementById('sub-dash-content');
+  const tIdx=todayIdx();const tomIdx=(tIdx+1)%7;
+  const active=customers.filter(c=>c.status==='active');
+  const weekDates=getWeekDates(0);
+  const todayISO_=todayISO();const tomDate=weekDates[tomIdx]||'';
+  const todaySkIds=new Set(allSkips.filter(s=>s.skip_date===todayISO_).map(s=>s.customer_id));
+  const tomSkIds=new Set(allSkips.filter(s=>s.skip_date===tomDate).map(s=>s.customer_id));
+  const todayCusts=active.filter(c=>scheduledFor(c,tIdx)&&!todaySkIds.has(c.id));
+  const todaySkipped=active.filter(c=>scheduledFor(c,tIdx)&&todaySkIds.has(c.id));
+  const tomCusts=active.filter(c=>scheduledFor(c,tomIdx)&&!tomSkIds.has(c.id));
+  let html=`<div style="font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;color:var(--gd);margin-bottom:10px;">📅 ${DAYNAMES[tIdx]}, ${todayStr()}</div>`;
+  html+=`<div class="sec-head" style="color:#1565c0;">📦 Today's Packs (${todayCusts.length})</div>`;
+  if(tIdx===6){html+=`<div class="card" style="text-align:center;padding:14px;color:#888;font-size:13px;">Sunday — stall closed 🌿</div>`;}
+  else if(todayCusts.length){html+=todayCusts.map(c=>`<div class="upcoming-card today"><div class="udl">TODAY</div><div class="uname">${esc(c.name)}</div><div class="uinfo">📞 ${esc(c.phone)} · ${c.total-c.used} remaining</div></div>`).join('');}
+  else{html+=`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No packs today.</div>`;}
+  if(todaySkipped.length){html+=`<div class="sec-head" style="color:#ff9800;">⏭️ Skipped Today (${todaySkipped.length})</div>`;html+=todaySkipped.map(c=>`<div class="upcoming-card" style="border-left:4px solid #ff9800;opacity:0.7;"><div class="udl">SKIPPED</div><div class="uname">${esc(c.name)}</div><div class="uinfo">📞 ${esc(c.phone)}</div></div>`).join('');}
+  if(tomIdx<6){html+=`<div class="sec-head" style="color:#e65100;">⏰ Tomorrow — Prepare! (${tomCusts.length})</div>`;if(tomCusts.length)html+=tomCusts.map(c=>`<div class="upcoming-card tomorrow"><div class="udl">TOMORROW — ${DAYNAMES[tomIdx]}</div><div class="uname">${esc(c.name)}</div><div class="uinfo">📞 ${esc(c.phone)} · ${c.total-c.used} remaining · 🔔</div></div>`).join('');else html+=`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No packs tomorrow.</div>`;}
+  else{html+=`<div class="card" style="text-align:center;padding:12px;font-size:13px;color:#888;">Tomorrow is Sunday 🌿</div>`;}
+  html+=`<div class="sec-head">📆 Weekly Schedule (tap day to see)</div><div class="week-grid">`;
+  for(let i=0;i<6;i++){const dc=active.filter(c=>scheduledFor(c,i));const sk=allSkips.filter(s=>s.skip_date===weekDates[i]).length;html+=`<div class="wdc ${i===tIdx?'today-day':''}" onclick="openDayModal(${i})"><div class="wdn">${DAYNAMES[i].slice(0,3)}${i===tIdx?' ✓':''}</div><div style="font-size:9px;color:var(--t3);">${fmtDate(weekDates[i])}</div><div class="wdc-count">${dc.length}</div><div class="wdc-names">${dc.slice(0,2).map(c=>esc(c.name.split(' ')[0])).join(', ')}${dc.length>2?'...':''}</div>${sk?`<div style="font-size:9px;color:#ff9800;">⏭️ ${sk}</div>`:''}</div>`;}
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function openDayModal(dayIdx){
+  dayModalIdx=dayIdx;
+  const active=customers.filter(c=>c.status==='active');
+  const weekDates=getWeekDates(0);const dateISO=weekDates[dayIdx]||'';
+  const skIds=new Set(allSkips.filter(s=>s.skip_date===dateISO).map(s=>s.customer_id));
+  const dc=active.filter(c=>scheduledFor(c,dayIdx));
+  const scheduled=dc.filter(c=>!skIds.has(c.id));const skipped=dc.filter(c=>skIds.has(c.id));
+  document.getElementById('day-modal-title').textContent=`📅 ${DAYNAMES[dayIdx]} ${fmtDate(dateISO)}`;
+  document.getElementById('day-cust-body').innerHTML=scheduled.length?scheduled.map(c=>`<div class="skip-item"><div><div style="font-size:13px;font-weight:600;">${esc(c.name)}</div><div style="font-size:11px;color:var(--t3);">📞 ${esc(c.phone)} · ${c.total-c.used} left</div></div></div>`).join(''):`<div style="color:var(--t3);font-size:12px;padding:8px 0;">No customers scheduled.</div>`;
+  document.getElementById('day-skip-body').innerHTML=skipped.length?skipped.map(s=>{const sk=allSkips.find(x=>x.customer_id===s.id&&x.skip_date===dateISO);return `<div class="skip-item"><div><div style="font-size:13px;font-weight:600;">${esc(s.name)}</div><div style="font-size:11px;color:#ff9800;">⏭️ Skipped</div></div>${sk?`<button class="btn-sm" onclick="unskip(${sk.id})" style="font-size:10px;">↩ Unskip</button>`:''}</div>`;}).join(''):`<div style="color:var(--t3);font-size:12px;padding:8px 0;">No skips.</div>`;
+  document.getElementById('modal-day-customers').classList.add('open');
+}
+async function unskip(skipId){try{await dbUpd('meal_skips',skipId,{unskipped:true});allSkips=allSkips.filter(s=>s.id!==skipId);if(dayModalIdx!==null)openDayModal(dayModalIdx);renderSubDashboard();toast('↩ Skip removed!');}catch(e){toast('Error!');}}
+
+// ─── WALK-INS ───
+function renderWalkins(){
+  document.getElementById('walkin-count').textContent=`Walk-ins (${walkins.length})`;
+  const el=document.getElementById('walkin-list');
+  if(!walkins.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🚶</div><p>No walk-ins yet.</p></div>`;return;}
+  const filtered=walkins.filter(w=>matchSearch(w));
+  if(!filtered.length){el.innerHTML=`<div class="no-results">No results.</div>`;return;}
+  const apPhones=new Set(customers.filter(c=>c.status==='active').map(c=>c.phone));
+  el.innerHTML=filtered.map(w=>{
+    const isSub=apPhones.has(w.phone);const prev=customers.find(c=>c.phone===w.phone&&c.status==='cancelled');
+    const subCust=customers.find(c=>c.phone===w.phone&&c.status==='active');
+    const pkgTag=isSub&&subCust?`<span class="tag t-pkg">${esc(getPkgName(subCust))}</span>`:'';
+    return `<div class="card ${isSub?'sw':''}">
+      <div class="crow"><div>
+        <div class="cname">${highlight(w.name,searchQ)}</div>
+        <div class="cphone">📞 ${highlight(w.phone||'—',searchQ)} · ${w.visit_date||''}</div>
+        <div class="ctags"><span class="tag t-wi">Walk-in</span>${isSub?'<span class="tag t-sub">Subscribed ✓</span>':''}${pkgTag}${!isSub&&prev?'<span class="tag t-cancelled">Prev. sub</span>':''}</div>
+      </div></div>
+      <div class="acts">
+        ${!isSub?`<button class="btn-subscribe" onclick="openSubscribeWalkin(${w.id})">✅ Subscribe</button>`:''}
+        ${!isSub?`<button class="btn-promote" onclick="openPromoModal(${w.id})">📢 Promote</button>`:''}
+        <button class="btn-edit" onclick="openEditCustomer(${w.id},'walkin')">✏️</button>
+        <button class="btn-delete" onclick="openDelete(${w.id},'walkin')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function promoteAll(){
+  if(!walkins.length){toast('No walk-ins!');return;}
+  const ap=new Set(customers.filter(c=>c.status==='active').map(c=>c.phone));
+  const el=walkins.filter(w=>w.phone&&!ap.has(w.phone));
+  if(!el.length){toast('No unsubscribed walk-ins!');return;}
+  let i=0;function next(){if(i>=el.length)return;const w=el[i++];window.open(`https://wa.me/91${w.phone}?text=${encodeURIComponent(buildPromoMsg(w.name))}`,'_blank');if(i<el.length)setTimeout(next,1500);}next();
+  toast(`📢 Sending to ${el.length} customers...`);
+}
+function openAddWalkin(){document.getElementById('wi-name').value='';document.getElementById('wi-phone').value='';document.getElementById('modal-addwalkin').classList.add('open');}
+async function saveWalkin(){
+  const name=document.getElementById('wi-name').value.trim();const phone=document.getElementById('wi-phone').value.trim();
+  if(!name){toast('Enter name!');return;}
+  setBtnLoading('btn-save-walkin',true);
+  try{const r=await dbIns('walkins',{name,phone,visit_date:todayStr(),is_deleted:false});walkins.unshift(r[0]);updateStats();renderWalkins();closeModals();toast(`✅ ${name} added!`);}
+  catch(e){toast('Error! '+e.message);}finally{setBtnLoading('btn-save-walkin',false);}
+}
+
+// PACKAGES
+function renderPackages(){
+  const el=document.getElementById('packages-list');
+  if(!packages.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📦</div><p>No packages yet.</p></div>`;return;}
+  el.innerHTML=packages.map(p=>`<div class="card">
+    <div class="crow"><div>
+      <div class="cname">${esc(p.name)}</div>
+      ${p.description?`<div class="cphone">${esc(p.description)}</div>`:''}
+    </div><span class="badge b-act">₹${p.price}</span></div>
+    <div class="acts">
+      <button class="btn-delete" onclick="deletePackage(${p.id})">🗑️ Remove</button>
+    </div>
+  </div>`).join('');
+}
+function openAddPackage(){document.getElementById('pkg-name').value='';document.getElementById('pkg-desc').value='';document.getElementById('pkg-price').value='';document.getElementById('modal-add-pkg').classList.add('open');}
+async function savePackage(){
+  const name=document.getElementById('pkg-name').value.trim();const price=parseInt(document.getElementById('pkg-price').value)||0;const desc=document.getElementById('pkg-desc').value.trim();
+  if(!name){toast('Enter package name!');return;}if(price<=0){toast('Enter valid price!');return;}
+  try{const r=await dbIns('packages',{name,description:desc||null,price,is_active:true});packages.push(r[0]);renderPackages();closeModals();toast(`✅ ${name} package added!`);}
+  catch(e){toast('Error!');}
+}
+async function deletePackage(id){if(!confirm('Remove this package?'))return;try{await dbUpd('packages',id,{is_active:false});packages=packages.filter(x=>x.id!==id);renderPackages();toast('Package removed.');}catch(e){toast('Error!');}}
+
+function populatePkgSelect(selectId){
+  const el=document.getElementById(selectId);if(!el)return;
+  el.innerHTML=packages.map(p=>`<option value="${p.id}">${esc(p.name)} — ₹${p.price}</option>`).join('');
+}
+
+// SUBSCRIBE FROM WALKIN
+function openSubscribeWalkin(id){
+  const w=walkins.find(x=>x.id===id);subWalkinId=id;
+  const prev=customers.find(c=>c.phone===w.phone&&c.status==='cancelled');
+  document.getElementById('sub-modal-info').innerHTML=prev?`<strong>${esc(w.name)}</strong> — Renewal #${(prev.renew_count||0)+1}. History preserved.`:`<strong>${esc(w.name)}</strong> — New subscription.`;
+  populatePkgSelect('sub-pkg-select');
+  document.getElementById('sub-payment').value='upi';
+  document.getElementById('sub-cash-box').style.display='none';
+  document.getElementById('modal-subscribe').classList.add('open');
+}
+function onSubPayChange(){const v=document.getElementById('sub-payment').value;document.getElementById('sub-cash-box').style.display=v==='cash'?'block':'none';}
+function calcSubChange(){const pkg=packages.find(x=>x.id==document.getElementById('sub-pkg-select').value);const price=pkg?.price||350;const recv=parseInt(document.getElementById('sub-cash-received').value)||0;document.getElementById('sub-change-amt').textContent='₹'+Math.max(0,recv-price);}
+
+async function confirmSubscribe(){
+  const w=walkins.find(x=>x.id===subWalkinId);
+  const pkgId=parseInt(document.getElementById('sub-pkg-select').value);
+  const pkg=packages.find(p=>p.id===pkgId)||packages[0];
+  const total=10;const sd=todayStr();const payment=document.getElementById('sub-payment').value;
+  const prev=customers.find(c=>c.phone===w.phone&&c.status==='cancelled');
+  setBtnLoading('btn-confirm-sub',true);
+  try{
+    let custId,renewCount=0;
+    if(prev){const nr=(prev.renew_count||0)+1;renewCount=nr;await dbUpd('customers',prev.id,{status:'active',used:0,total,renew_count:nr,last_renewed:sd,pack_start_date:sd,is_deleted:false,package_id:pkgId,payment_mode:payment});await dbIns('meal_logs',{customer_id:prev.id,action:'resubscribed',meal_number:0,pack_number:nr+1});prev.status='active';prev.used=0;prev.total=total;prev.renew_count=nr;prev.last_renewed=sd;prev.pack_start_date=sd;prev.package_id=pkgId;prev.payment_mode=payment;custId=prev.id;}
+    else{const r=await dbIns('customers',{name:w.name,phone:w.phone,type:'subscribe',total,used:0,join_date:sd,renew_count:0,last_renewed:null,pack_start_date:sd,status:'active',is_deleted:false,preferred_days:[],package_id:pkgId,payment_mode:payment});customers.unshift(r[0]);custId=r[0].id;}
+    updateStats();renderWalkins();
+    welcomePhone=w.phone||'';welcomeMsgTxt=buildWelcomeMsg(w.name,total,sd,renewCount,pkg);
+    if(payment==='scanpay'){closeModals();showSubQR(pkg.price,w.name,welcomePhone,welcomeMsgTxt);}
+    else{closeModals();document.getElementById('welcome-msg').textContent=welcomeMsgTxt;document.getElementById('modal-welcome').classList.add('open');toast(`🎉 ${w.name} subscribed!`);}
+  }catch(e){toast('Error! '+e.message);}finally{setBtnLoading('btn-confirm-sub',false);}
+}
+function showSubQR(amount,name,phone,welcomeMsg){
+  const upiUrl=`upi://pay?pa=${UPI_ID}&pn=Morning+Bites&am=${amount}&cu=INR&tn=${encodeURIComponent('Subscription - '+name)}`;
+  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+  document.getElementById('qr-modal-body').innerHTML=`<div style="text-align:center;padding:10px 0;"><div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:700;color:var(--gd);margin-bottom:4px;">₹${amount}</div><div style="font-size:12px;color:var(--t3);margin-bottom:14px;">${esc(name)} — Subscription</div><img src="${qrUrl}" style="width:200px;height:200px;border-radius:var(--rs);border:1px solid #eee;" alt="QR"/><div style="font-size:11px;color:var(--t3);margin-top:10px;">UPI: ${UPI_ID}</div></div>`;
+  pendingBillData={type:'sub',phone,welcomeMsg};
+  document.getElementById('modal-qr').classList.add('open');
+}
+
+// ADD SUBSCRIBED DIRECTLY
+function openAddSubscribed(){document.getElementById('as-name').value='';document.getElementById('as-phone').value='';document.getElementById('as-payment').value='upi';document.getElementById('as-cash-box').style.display='none';populatePkgSelect('as-pkg-select');document.getElementById('modal-addsub').classList.add('open');}
+function onAsPayChange(){const v=document.getElementById('as-payment').value;document.getElementById('as-cash-box').style.display=v==='cash'?'block':'none';}
+function calcAsChange(){const pkg=packages.find(x=>x.id==document.getElementById('as-pkg-select').value);const price=pkg?.price||350;const recv=parseInt(document.getElementById('as-cash-received').value)||0;document.getElementById('as-change-amt').textContent='₹'+Math.max(0,recv-price);}
+async function confirmAddSubscribed(){
+  const name=document.getElementById('as-name').value.trim();const phone=document.getElementById('as-phone').value.trim();
+  const pkgId=parseInt(document.getElementById('as-pkg-select').value);const pkg=packages.find(p=>p.id===pkgId)||packages[0];
+  const payment=document.getElementById('as-payment').value;
+  if(!name){toast('Enter name!');return;}if(!phone||phone.length<10){toast('Enter valid phone!');return;}
+  const total=10;const sd=todayStr();const prev=customers.find(c=>c.phone===phone&&c.status==='cancelled');
+  setBtnLoading('btn-confirm-addsub',true);
+  try{
+    let renewCount=0;
+    if(prev){const nr=(prev.renew_count||0)+1;renewCount=nr;await dbUpd('customers',prev.id,{status:'active',used:0,total,renew_count:nr,last_renewed:sd,pack_start_date:sd,name,phone,is_deleted:false,package_id:pkgId,payment_mode:payment});await dbIns('meal_logs',{customer_id:prev.id,action:'resubscribed',meal_number:0,pack_number:nr+1});prev.status='active';prev.used=0;prev.total=total;prev.renew_count=nr;prev.name=name;prev.phone=phone;prev.package_id=pkgId;prev.payment_mode=payment;}
+    else{const r=await dbIns('customers',{name,phone,type:'subscribe',total,used:0,join_date:sd,renew_count:0,last_renewed:null,pack_start_date:sd,status:'active',is_deleted:false,preferred_days:[],package_id:pkgId,payment_mode:payment});customers.unshift(r[0]);}
+    if(!walkins.find(w=>w.phone===phone)){const wr=await dbIns('walkins',{name,phone,visit_date:sd,is_deleted:false});walkins.unshift(wr[0]);}
+    updateStats();renderSubscribed();
+    welcomePhone=phone;welcomeMsgTxt=buildWelcomeMsg(name,total,sd,renewCount,pkg);
+    if(payment==='scanpay'){closeModals();showSubQR(pkg.price,name,phone,welcomeMsgTxt);}
+    else{closeModals();document.getElementById('welcome-msg').textContent=welcomeMsgTxt;document.getElementById('modal-welcome').classList.add('open');toast(`🎉 ${name} subscribed!`);}
+  }catch(e){toast('Error! '+e.message);}finally{setBtnLoading('btn-confirm-addsub',false);}
+}
+
+// QR Modal confirm/change
+function confirmQRDone(){
+  closeModals();
+  if(pendingBillData?.type==='sub'){document.getElementById('welcome-msg').textContent=pendingBillData.welcomeMsg;document.getElementById('modal-welcome').classList.add('open');toast('🎉 Payment done! Welcome message ready.');}
+  else if(pendingBillData?.type==='bill'){clearBillForm();toast(`✅ Bill confirmed! ₹${pendingBillData.amount}`);}
+  pendingBillData=null;
+}
+function changeQRPayMode(){
+  closeModals();
+  if(pendingBillData?.type==='bill'){document.getElementById('bill-payment').value='cash';onPayModeChange();toast('↩ Mode changed to Cash.');}
+  pendingBillData=null;
+}
+
+// SUBSCRIBED LIST
+function setSubFilter(f){subFilter=f;document.querySelectorAll('#sub-filter-bar .filter-btn').forEach((b,i)=>b.classList.toggle('active',['all','active','low','done','new','renewed'][i]===f));renderSubscribed();}
+function renderSubscribed(){
+  let active=customers.filter(c=>c.status==='active');
+  if(subFilter==='active')active=active.filter(c=>c.used<c.total);
+  else if(subFilter==='low')active=active.filter(c=>{const l=c.total-c.used;return l>0&&l<=2;});
+  else if(subFilter==='done')active=active.filter(c=>c.used>=c.total);
+  else if(subFilter==='new')active=active.filter(c=>!c.renew_count||c.renew_count===0);
+  else if(subFilter==='renewed')active=active.filter(c=>c.renew_count&&c.renew_count>0);
+  const filtered=active.filter(c=>matchSearch(c));
+  const el=document.getElementById('subscribed-list');
+  if(!customers.filter(c=>c.status==='active').length){el.innerHTML=`<div class="empty"><div class="empty-icon">🌱</div><p>No active subscriptions yet.</p></div>`;return;}
+  if(!filtered.length){el.innerHTML=`<div class="no-results">No results found.</div>`;return;}
+  el.innerHTML=filtered.map(c=>{
+    const left=c.total-c.used;const pct=Math.round((c.used/c.total)*100);
+    let bc='b-act',bt=left+' meals left',fc='fg';
+    if(left<=0){bc='b-done';bt='Pack done';fc='fgr';}else if(left<=2){bc='b-low';bt='⚠️ '+left+' left';fc='fo';}
+    const isNew=!c.renew_count||c.renew_count===0;
+    const renewTag=isNew?`<span class="tag t-new">🆕 New</span>`:`<span class="tag t-r">🔄 ×${c.renew_count}</span>`;
+    const isWi=walkins.some(w=>w.phone===c.phone);
+    const prefDays=(c.preferred_days||[]).map(Number);
+    const offset=custWeekOffsets[c.id]||0;
+    const weekDates=getWeekDates(offset);
+    const skippedDates=new Set(allSkips.filter(s=>s.customer_id===c.id).map(s=>s.skip_date));
+    const weekLabel=offset===0?'This week':offset>0?`+${offset} wk`:`${offset} wk`;
+    const pkgTag=`<span class="tag t-pkg">${esc(getPkgName(c))}</span>`;
+    const pmTag=c.payment_mode?`<span class="tag" style="background:#f5f5f5;color:#555;">${pmLabel(c.payment_mode)}</span>`:'';
+    const daysHtml=`<div class="week-nav"><button class="wnb" onclick="changeWeek(${c.id},-1,event)">‹</button><span class="wlbl">${weekLabel}</span><button class="wnb" onclick="changeWeek(${c.id},1,event)">›</button></div>
+    <div class="days-wrap">${DAYS.map((d,i)=>{const dateISO=weekDates[i];const isSkipped=skippedDates.has(dateISO);let cls='day-btn';if(isSkipped)cls+=' skipped';else if(prefDays.includes(i))cls+=' sel';return `<div class="day-col"><span class="day-date-lbl">${fmtDate(dateISO)}</span><button class="${cls}" onclick="toggleDay(${c.id},${i})">${d}${isSkipped?'⏭':''}</button></div>`;}).join('')}</div>`;
+    return `<div class="card">
+      <div class="crow"><div>
+        <div class="cname">${highlight(c.name,searchQ)}</div>
+        <div class="cphone">📞 ${highlight(c.phone,searchQ)} · ${c.join_date||''}</div>
+        <div class="ctags">${isWi?'<span class="tag t-wi">Walk-in</span>':''}<span class="tag t-sub">Subscribed</span>${pkgTag}${renewTag}${pmTag}</div>
+        ${daysHtml}
+      </div><span class="badge ${bc}">${bt}</span></div>
+      <div class="prog-wrap">
+        <div class="prog-meta"><span>${c.used} used</span><span>${c.total} total</span></div>
+        <div class="prog-track"><div class="prog-fill ${fc}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="acts">
+        <button class="btn-use" id="btn-use-${c.id}" onclick="useMeal(${c.id})" ${left<=0?'disabled':''}>✓ Use</button>
+        <button class="btn-undo" id="btn-undo-${c.id}" onclick="undoMeal(${c.id})" ${c.used<=0?'disabled':''}>↩</button>
+        <button class="btn-skip" onclick="openSkip(${c.id})">⏭️ Skip</button>
+        <button class="btn-sm" onclick="openManageSkips(${c.id})">📅</button>
+        <button class="btn-sm" onclick="openNotify(${c.id})">📩</button>
+        <button class="btn-sm" onclick="openAudit(${c.id})">📋</button>
+        <button class="btn-edit" onclick="openEditCustomer(${c.id},'sub')">✏️</button>
+        <button class="btn-renew" onclick="renewPack(${c.id})" ${left>0?'disabled':''}>🔄 Renew</button>
+        <button class="btn-cancel-sub" onclick="openCancelSub(${c.id})">❌</button>
+        <button class="btn-delete" onclick="openDelete(${c.id},'sub')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function changeWeek(custId,delta,e){e.stopPropagation();custWeekOffsets[custId]=(custWeekOffsets[custId]||0)+delta;renderSubscribed();}
+
+async function toggleDay(custId,dayIdx){
+  const c=customers.find(x=>x.id===custId);if(!c)return;
+  let days=[...(c.preferred_days||[])].map(Number);
+  if(days.includes(dayIdx))days=days.filter(d=>d!==dayIdx);else days.push(dayIdx);
+  try{await dbUpd('customers',custId,{preferred_days:days});c.preferred_days=days;renderSubscribed();toast(days.length===0?'All days selected':'Days saved!');}
+  catch(e){toast('Error!');}
+}
+
+// SKIP
+function openSkip(id){
+  const c=customers.find(x=>x.id===id);skipCustId=id;
+  document.getElementById('skip-info').innerHTML=`Skip pack for <strong>${esc(c.name)}</strong>`;
+  document.getElementById('skip-date').value=todayISO();
+  updateSkipPreview();
+  document.getElementById('modal-skip').classList.add('open');
+}
+function updateSkipPreview(){
+  const c=customers.find(x=>x.id===skipCustId);if(!c)return;
+  const dateVal=document.getElementById('skip-date').value;if(!dateVal)return;
+  const d=new Date(dateVal+'T00:00:00');const dName=DAYNAMES[(d.getDay()+6)%7];
+  document.getElementById('skip-msg-preview').textContent=`Hello ${c.name},\n\nThis confirms your Morning Bites pack has been skipped for:\n\n📅 ${dName}, ${d.toLocaleDateString('en-IN')}\n\nYour remaining meals count stays the same. See you on your next scheduled day!\n\nThank you,\nMorning Bites 🌿`;
+}
+async function confirmSkip(){
+  const c=customers.find(x=>x.id===skipCustId);const dateVal=document.getElementById('skip-date').value;
+  const msg=document.getElementById('skip-msg-preview').textContent;
+  setBtnLoading('btn-skip-send',true);
+  try{
+    const r=await dbIns('meal_skips',{customer_id:skipCustId,skip_date:dateVal,notified:true,unskipped:false});
+    allSkips.push(r[0]);closeModals();renderSubscribed();
+    if(c.phone){
+      // Direct WhatsApp open with message
+      window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+    toast(`⏭️ Pack skipped for ${c.name}.`);
+  }catch(e){toast('Error!');}finally{setBtnLoading('btn-skip-send',false);}
+}
+async function openManageSkips(custId){
+  const c=customers.find(x=>x.id===custId);document.getElementById('ms-cname').textContent=c.name;document.getElementById('ms-body').innerHTML=`<div class="loading"><div class="spinner"></div>Loading...</div>`;document.getElementById('modal-manage-skips').classList.add('open');
+  try{const skips=await dbGet('meal_skips',`select=*&customer_id=eq.${custId}&order=skip_date.desc`);if(!skips.length){document.getElementById('ms-body').innerHTML=`<div style="color:var(--t3);font-size:12px;padding:12px;">No skip history.</div>`;return;}document.getElementById('ms-body').innerHTML=skips.map(s=>`<div class="skip-item"><div><div style="font-size:13px;font-weight:600;">${s.skip_date}</div><div style="font-size:11px;color:${s.unskipped?'#43a047':'#ff9800'};">${s.unskipped?'↩ Unskipped':'⏭️ Skipped'}</div></div>${!s.unskipped?`<button class="btn-sm" onclick="unskipManage(${s.id},${custId})" style="font-size:10px;">↩ Unskip</button>`:'<span style="font-size:10px;color:#aaa;">Removed</span>'}</div>`).join('');}catch(e){document.getElementById('ms-body').innerHTML=`<div style="color:var(--t3);font-size:12px;">Error.</div>`;}
+}
+async function unskipManage(skipId,custId){try{await dbUpd('meal_skips',skipId,{unskipped:true});allSkips=allSkips.filter(s=>s.id!==skipId);openManageSkips(custId);renderSubscribed();toast('↩ Skip removed!');}catch(e){toast('Error!');}}
+
+// USE / UNDO / RENEW
+async function useMeal(id){
+  const c=customers.find(x=>x.id===id);if(!c||c.used>=c.total){toast('No meals remaining!');return;}
+  setBtnLoading(`btn-use-${id}`,true);
+  const nu=c.used+1;
+  try{await dbUpd('customers',id,{used:nu});await dbIns('meal_logs',{customer_id:id,action:'used',meal_number:nu,pack_number:(c.renew_count||0)+1});c.used=nu;const left=c.total-nu;updateStats();renderSubscribed();
+    const msgs=buildMsgs(c);notifyPhone=c.phone;notifyMsgs=msgs;notifyType='update';document.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',i===0));document.getElementById('notify-msg').textContent=msgs['update'];document.getElementById('modal-notify').classList.add('open');
+    if(left===0)toast(`${c.name}: Pack done! 🔄`);else if(left<=2)toast(`⚠️ Only ${left} left`);else toast(`✅ Meal marked — ${left} remaining`);
+  }catch(e){toast('Error!');}finally{setBtnLoading(`btn-use-${id}`,false);}
+}
+async function undoMeal(id){const c=customers.find(x=>x.id===id);if(!c||c.used<=0){toast('Nothing to undo!');return;}setBtnLoading(`btn-undo-${id}`,true);const nu=c.used-1;try{await dbUpd('customers',id,{used:nu});await dbIns('meal_logs',{customer_id:id,action:'undone',meal_number:c.used,pack_number:(c.renew_count||0)+1});c.used=nu;updateStats();renderSubscribed();toast(`↩ Undone.`);}catch(e){toast('Error!');}finally{setBtnLoading(`btn-undo-${id}`,false);}}
+async function renewPack(id){const c=customers.find(x=>x.id===id);if(!c)return;const nr=(c.renew_count||0)+1;const sd=todayStr();try{await dbUpd('customers',id,{used:0,total:10,renew_count:nr,last_renewed:sd,pack_start_date:sd,status:'active'});await dbIns('meal_logs',{customer_id:id,action:'renewed',meal_number:0,pack_number:nr+1});c.used=0;c.total=10;c.renew_count=nr;c.last_renewed=sd;c.pack_start_date=sd;updateStats();renderSubscribed();toast(`🎉 ${c.name}'s pack renewed!`);}catch(e){toast('Error!');}}
+function openCancelSub(id){const c=customers.find(x=>x.id===id);cancelSubId=id;document.getElementById('cancel-info').innerHTML=`Cancel for <strong>${esc(c.name)}</strong>?<br>${c.total-c.used} meals remaining.`;document.getElementById('modal-cancel-sub').classList.add('open');}
+async function confirmCancelSub(){const c=customers.find(x=>x.id===cancelSubId);try{await dbUpd('customers',cancelSubId,{status:'cancelled'});await dbIns('meal_logs',{customer_id:cancelSubId,action:'cancelled',meal_number:0,pack_number:(c.renew_count||0)+1});c.status='cancelled';updateStats();renderSubscribed();renderWalkins();closeModals();toast(`❌ ${c.name}'s subscription cancelled.`);}catch(e){toast('Error!');}}
+function openDelete(id,type){deleteId=id;deleteType=type;const obj=type==='walkin'?walkins.find(x=>x.id===id):customers.find(x=>x.id===id);document.getElementById('del-cname').textContent=`${obj.name} (📞 ${obj.phone||'—'})`;document.getElementById('modal-delete').classList.add('open');}
+async function confirmDelete(){try{if(deleteType==='walkin'){const w=walkins.find(x=>x.id===deleteId);await dbUpd('walkins',deleteId,{is_deleted:true});const c=customers.find(x=>x.phone===w.phone);if(c){await dbUpd('customers',c.id,{is_deleted:true,status:'cancelled'});customers=customers.filter(x=>x.id!==c.id);}walkins=walkins.filter(x=>x.id!==deleteId);toast(`🗑️ ${w.name} removed.`);}else{const c=customers.find(x=>x.id===deleteId);await dbUpd('customers',deleteId,{is_deleted:true,status:'cancelled'});const w=walkins.find(x=>x.phone===c.phone);if(w){await dbUpd('walkins',w.id,{is_deleted:true});walkins=walkins.filter(x=>x.id!==w.id);}customers=customers.filter(x=>x.id!==deleteId);toast(`🗑️ ${c.name} removed.`);}updateStats();renderWalkins();renderSubscribed();closeModals();}catch(e){toast('Error!');}}
+function openEditCustomer(id,type){editCustId=id;editCustType=type;const obj=type==='walkin'?walkins.find(x=>x.id===id):customers.find(x=>x.id===id);document.getElementById('edit-name').value=obj.name||'';document.getElementById('edit-phone').value=obj.phone||'';document.getElementById('modal-edit-customer').classList.add('open');}
+async function saveEditCustomer(){const name=document.getElementById('edit-name').value.trim();const phone=document.getElementById('edit-phone').value.trim();if(!name){toast('Enter name!');return;}try{if(editCustType==='walkin'){const w=walkins.find(x=>x.id===editCustId);const op=w.phone;await dbUpd('walkins',editCustId,{name,phone});w.name=name;w.phone=phone;const c=customers.find(x=>x.phone===op);if(c){await dbUpd('customers',c.id,{name,phone});c.name=name;c.phone=phone;}}else{const c=customers.find(x=>x.id===editCustId);const op=c.phone;await dbUpd('customers',editCustId,{name,phone});c.name=name;c.phone=phone;const w=walkins.find(x=>x.phone===op);if(w){await dbUpd('walkins',w.id,{name,phone});w.name=name;w.phone=phone;}}closeModals();renderWalkins();renderSubscribed();toast('✅ Updated!');}catch(e){toast('Error!');}}
+
+// BILLING
+function onPayModeChange(){const v=document.getElementById('bill-payment').value;document.getElementById('cash-box').style.display=v==='cash'?'block':'none';}
+function calcChange(){const total=parseInt(document.getElementById('bill-total-amt').value)||0;const recv=parseInt(document.getElementById('cash-received').value)||0;document.getElementById('change-amt').textContent='₹'+Math.max(0,recv-total);}
+function renderBillingMenu(){
+  billQtys={};
+  const active=menuItems.filter(m=>m.is_active).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const el=document.getElementById('menu-order-list');
+  if(!active.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🍽️</div><p>No active menu items.</p></div>`;document.getElementById('bill-total-amt').value=0;return;}
+  let html='<div class="menu-section"><div class="mst">Menu Items</div>';
+  active.forEach(item=>{
+    const opts=item.options||[];if(!opts.length)return;
+    if(opts.length===1){const key=`${item.id}_0`;const o=opts[0];html+=`<div class="moi"><div><div class="moi-name">${esc(item.name)}</div><div class="moi-price">₹${o.price}${o.label?' · '+esc(o.label):''}</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="chQty('${key}',-1,${o.price})">−</button><span class="qty-num" id="qty-${key}">0</span><button class="qty-btn" onclick="chQty('${key}',1,${o.price})">+</button></div></div>`;}
+    else{html+=`</div><div class="menu-section"><div class="mst">${esc(item.name)}</div>`;opts.forEach((o,oi)=>{const key=`${item.id}_${oi}`;html+=`<div class="moi"><div><div class="moi-name">${esc(o.label||'Standard')}</div><div class="moi-price">₹${o.price}</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="chQty('${key}',-1,${o.price})">−</button><span class="qty-num" id="qty-${key}">0</span><button class="qty-btn" onclick="chQty('${key}',1,${o.price})">+</button></div></div>`;});}
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  document.getElementById('bill-total-amt').value=0;
+}
+function chQty(key,delta,price){if(!billQtys[key])billQtys[key]={qty:0,price};billQtys[key].qty=Math.max(0,billQtys[key].qty+delta);const el=document.getElementById('qty-'+key);if(el)el.textContent=billQtys[key].qty;syncTotal();}
+function syncTotal(){const total=Object.values(billQtys).reduce((s,v)=>s+v.qty*v.price,0);document.getElementById('bill-total-amt').value=total;calcChange();}
+function clearBillForm(){billQtys={};document.getElementById('bill-name').value='';document.getElementById('bill-notes').value='';document.getElementById('bill-payment').value='cash';document.getElementById('cash-box').style.display='block';document.getElementById('cash-received').value='';document.getElementById('change-amt').textContent='₹0';renderBillingMenu();}
+async function generateBill(){
+  const items=Object.entries(billQtys).filter(([k,v])=>v.qty>0);
+  if(!items.length){toast('Add items to bill!');return;}
+  const total=parseInt(document.getElementById('bill-total-amt').value)||0;
+  const name=document.getElementById('bill-name').value.trim()||'Walk-in Customer';
+  const payment=document.getElementById('bill-payment').value;
+  const notes=document.getElementById('bill-notes').value.trim();
+  const bd=todayStr();
+  setBtnLoading('btn-gen-bill',true);
+  const billItems=[];
+  for(const [key,v] of items){const[itemId,optIdx]=key.split('_');const item=menuItems.find(m=>m.id==itemId);const opt=item.options[parseInt(optIdx)];billItems.push({name:item.name,option:opt.label||'',qty:v.qty,price:v.price,subtotal:v.qty*v.price});}
+  try{
+    const r=await dbIns('bills',{customer_name:name,customer_phone:null,items:billItems,total_amount:total,payment_mode:payment,bill_date:bd,notes:notes||null});
+    billsData.unshift(r[0]);
+    if(payment==='scanpay'){
+      const upiUrl=`upi://pay?pa=${UPI_ID}&pn=Morning+Bites&am=${total}&cu=INR&tn=${encodeURIComponent('Bill - '+name)}`;
+      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+      document.getElementById('qr-modal-body').innerHTML=`<div style="text-align:center;padding:10px 0;"><div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:700;color:var(--gd);margin-bottom:4px;">₹${total}</div><div style="font-size:12px;color:var(--t3);margin-bottom:14px;">${esc(name)}</div><img src="${qrUrl}" style="width:200px;height:200px;border-radius:var(--rs);border:1px solid #eee;" alt="QR"/><div style="font-size:11px;color:var(--t3);margin-top:10px;">UPI: ${UPI_ID}</div></div>`;
+      pendingBillData={type:'bill',amount:total};
+      document.getElementById('modal-qr').classList.add('open');
+    }else{clearBillForm();toast(`✅ Bill saved! ₹${total} · ${name}`);}
+  }catch(e){toast('Error! '+e.message);}finally{setBtnLoading('btn-gen-bill',false);}
+}
+
+// BILL REPORTS
+function setBillPeriod(p){
+  billPeriod=p;
+  document.querySelectorAll('.ptab').forEach((t,i)=>t.classList.toggle('active',['day','week','month','range'][i]===p));
+  const rw=document.getElementById('date-range-wrap');if(rw)rw.style.display=p==='range'?'flex':'none';
+  renderBillReports();
+}
+function setBillView(v){billView=v;document.querySelectorAll('.itab').forEach((t,i)=>t.classList.toggle('active',['summary','history'][i]===v));renderBillReports();}
+function getFilteredBills(){
+  const now=new Date();const todayS=todayStr();
+  const weekStart=new Date(now);weekStart.setDate(now.getDate()-((now.getDay()+6)%7));weekStart.setHours(0,0,0,0);
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  return billsData.filter(b=>{
+    const d=new Date(b.created_at);
+    if(billPeriod==='day')return b.bill_date===todayS;
+    if(billPeriod==='week')return d>=weekStart;
+    if(billPeriod==='month')return d>=monthStart;
+    if(billPeriod==='range'){
+      const from=document.getElementById('range-from')?.value;
+      const to=document.getElementById('range-to')?.value;
+      if(from&&to){return d>=new Date(from+'T00:00:00')&&d<=new Date(to+'T23:59:59');}
+      if(from){return d>=new Date(from+'T00:00:00');}
+      return true;
+    }
+    return true;
+  });
+}
+function renderBillReports(){
+  const filtered=getFilteredBills();
+  const totalRev=filtered.reduce((s,b)=>s+b.total_amount,0);
+  const cashRev=filtered.filter(b=>b.payment_mode==='cash').reduce((s,b)=>s+b.total_amount,0);
+  const upiRev=filtered.filter(b=>b.payment_mode==='upi').reduce((s,b)=>s+b.total_amount,0);
+  const qrRev=filtered.filter(b=>b.payment_mode==='scanpay').reduce((s,b)=>s+b.total_amount,0);
+  let html=`<div class="sum-grid">
+    <div class="sum-card"><div class="snum">${filtered.length}</div><div class="slbl">Bills</div></div>
+    <div class="sum-card"><div class="snum">₹${totalRev.toLocaleString('en-IN')}</div><div class="slbl">Total revenue</div></div>
+    <div class="sum-card"><div class="snum">₹${cashRev.toLocaleString('en-IN')}</div><div class="slbl">💵 Cash</div></div>
+    <div class="sum-card"><div class="snum">₹${upiRev.toLocaleString('en-IN')}</div><div class="slbl">📱 UPI</div></div>
+    <div class="sum-card"><div class="snum">₹${qrRev.toLocaleString('en-IN')}</div><div class="slbl">📷 Scan &amp; Pay</div></div>
+  </div>
+  <div style="margin-bottom:12px;"><button class="btn-sm" style="width:100%;" onclick="shareReport()">📤 Share Report on WhatsApp</button></div>`;
+  if(billView==='summary'){
+    const it={};filtered.forEach(b=>{(b.items||[]).forEach(x=>{const k=x.name+(x.option?' ('+x.option+')':'');if(!it[k])it[k]={qty:0,rev:0};it[k].qty+=x.qty;it[k].rev+=x.subtotal;});});
+    html+=`<div class="sec-head">📊 Item-wise Sales</div>`;
+    html+=Object.keys(it).length?Object.entries(it).sort((a,b)=>b[1].rev-a[1].rev).map(([k,v])=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:13px;font-weight:600;">${esc(k)}</div><div style="font-size:11px;color:var(--t3);">Qty: ${v.qty}</div></div><span class="badge b-act">₹${v.rev}</span></div></div>`).join(''):`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No sales.</div>`;
+  }else{
+    html+=`<div class="sec-head">📋 History</div>`;
+    html+=filtered.length?filtered.map(b=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:13px;font-weight:600;">${esc(b.customer_name||'Walk-in')}</div><div style="font-size:11px;color:var(--t3);">${b.bill_date} · ${pmLabel(b.payment_mode)}${b.notes?' · 📝':''}</div></div><div style="display:flex;align-items:center;gap:6px;"><span class="badge b-act">₹${b.total_amount}</span><button class="btn-edit" onclick="openEditBill(${b.id})" style="font-size:10px;">✏️</button><button class="btn-delete" onclick="deleteBill(${b.id})" style="font-size:10px;padding:4px 7px;">🗑️</button></div></div><div style="font-size:11px;color:var(--t3);margin-top:4px;">${(b.items||[]).map(it=>esc(it.name+(it.option?' ('+it.option+')':''))+' ×'+it.qty).join(', ')}</div>${b.notes?`<div style="font-size:11px;color:#666;margin-top:4px;font-style:italic;">📝 ${esc(b.notes)}</div>`:''}</div>`).join(''):`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No transactions.</div>`;
+  }
+  document.getElementById('bill-reports-content').innerHTML=html;
+}
+async function deleteBill(id){if(!confirm('Delete this bill?'))return;try{await dbDel('bills',id);billsData=billsData.filter(b=>b.id!==id);renderBillReports();toast('Bill deleted.');}catch(e){toast('Error!');}}
+function openEditBill(id){
+  editBillId=id;const b=billsData.find(x=>x.id===id);
+  document.getElementById('edit-bill-name').value=b.customer_name||'';
+  const pm=document.getElementById('edit-bill-payment');if(pm)pm.value=b.payment_mode||'cash';
+  let html=(b.items||[]).map((it,i)=>`<div class="ebi"><span class="ebi-name">${esc(it.name)}${it.option?' ('+esc(it.option)+')':''}</span><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:11px;color:var(--t3);">Qty</span><input class="eqi" type="number" id="ebill-qty-${i}" value="${it.qty}" min="0" oninput="recalcEBTotal()"/><span style="font-size:11px;color:var(--t3);">×₹</span><input class="epi" type="number" id="ebill-price-${i}" value="${it.price}" min="0" oninput="recalcEBTotal()"/></div></div>`).join('');
+  document.getElementById('edit-bill-items-wrap').innerHTML=html;
+  const activeMenu=menuItems.filter(m=>m.is_active).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  let newHtml='';
+  activeMenu.forEach(item=>{const opts=item.options||[];if(!opts.length)return;if(opts.length===1){const key=`ei_${item.id}_0`;newHtml+=`<div class="moi"><div><div class="moi-name">${esc(item.name)}</div><div class="moi-price">₹${opts[0].price}</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="chEBQty('${key}',-1,${opts[0].price})">−</button><span class="qty-num" id="eq-${key}">0</span><button class="qty-btn" onclick="chEBQty('${key}',1,${opts[0].price})">+</button></div></div>`;}else{opts.forEach((o,oi)=>{const key=`ei_${item.id}_${oi}`;newHtml+=`<div class="moi"><div><div class="moi-name">${esc(item.name)} (${esc(o.label||'')})</div><div class="moi-price">₹${o.price}</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="chEBQty('${key}',-1,${o.price})">−</button><span class="qty-num" id="eq-${key}">0</span><button class="qty-btn" onclick="chEBQty('${key}',1,${o.price})">+</button></div></div>`;});}});
+  document.getElementById('edit-bill-add-items').innerHTML=newHtml;
+  editBillNewQtys={};
+  document.getElementById('edit-bill-total').value=b.total_amount;
+  document.getElementById('modal-edit-bill').classList.add('open');
+}
+function chEBQty(key,delta,price){if(!editBillNewQtys[key])editBillNewQtys[key]={qty:0,price};editBillNewQtys[key].qty=Math.max(0,editBillNewQtys[key].qty+delta);const el=document.getElementById('eq-'+key);if(el)el.textContent=editBillNewQtys[key].qty;recalcEBTotal();}
+function recalcEBTotal(){const b=billsData.find(x=>x.id===editBillId);let total=(b.items||[]).reduce((s,it,i)=>{const qty=parseInt(document.getElementById(`ebill-qty-${i}`)?.value||'0');const price=parseInt(document.getElementById(`ebill-price-${i}`)?.value||it.price);return s+qty*price;},0);total+=Object.values(editBillNewQtys).reduce((s,v)=>s+v.qty*v.price,0);document.getElementById('edit-bill-total').value=total;}
+async function saveEditBill(){
+  const b=billsData.find(x=>x.id===editBillId);if(!b)return;
+  const name=document.getElementById('edit-bill-name').value.trim()||b.customer_name;
+  const payment=document.getElementById('edit-bill-payment').value||b.payment_mode;
+  let items=(b.items||[]).map((it,i)=>{const qty=parseInt(document.getElementById(`ebill-qty-${i}`)?.value||'0');const price=parseInt(document.getElementById(`ebill-price-${i}`)?.value||it.price);return {...it,qty,price,subtotal:qty*price};}).filter(it=>it.qty>0);
+  for(const [key,v] of Object.entries(editBillNewQtys)){if(v.qty<=0)continue;const[,itemId,optIdx]=key.split('_');const item=menuItems.find(m=>m.id==itemId);if(!item)continue;const opt=item.options[parseInt(optIdx)];items.push({name:item.name,option:opt?.label||'',qty:v.qty,price:v.price,subtotal:v.qty*v.price});}
+  const total=parseInt(document.getElementById('edit-bill-total').value)||0;
+  try{await dbUpd('bills',editBillId,{items,total_amount:total,customer_name:name,payment_mode:payment});b.items=items;b.total_amount=total;b.customer_name=name;b.payment_mode=payment;closeModals();renderBillReports();toast('✅ Bill updated!');}catch(e){toast('Error!');}
+}
+function shareReport(){
+  const filtered=getFilteredBills();
+  const totalRev=filtered.reduce((s,b)=>s+b.total_amount,0);const cashRev=filtered.filter(b=>b.payment_mode==='cash').reduce((s,b)=>s+b.total_amount,0);const upiRev=filtered.filter(b=>b.payment_mode==='upi').reduce((s,b)=>s+b.total_amount,0);const qrRev=filtered.filter(b=>b.payment_mode==='scanpay').reduce((s,b)=>s+b.total_amount,0);
+  const periodLabel=billPeriod==='day'?'Today':billPeriod==='week'?'This Week':billPeriod==='month'?'This Month':'Date Range';
+  const it={};filtered.forEach(b=>{(b.items||[]).forEach(x=>{const k=x.name+(x.option?' ('+x.option+')':'');if(!it[k])it[k]={qty:0,rev:0};it[k].qty+=x.qty;it[k].rev+=x.subtotal;});});
+  let report=`📊 *Morning Bites — ${periodLabel} Report*\n📅 ${todayStr()}\n\n💰 Total Revenue: ₹${totalRev.toLocaleString('en-IN')}\n🧾 Bills: ${filtered.length}\n💵 Cash: ₹${cashRev.toLocaleString('en-IN')}\n📱 UPI: ₹${upiRev.toLocaleString('en-IN')}\n📷 Scan & Pay: ₹${qrRev.toLocaleString('en-IN')}\n\n`;
+  if(Object.keys(it).length){report+=`─────────────\n📊 Item Sales:\n`;Object.entries(it).sort((a,b)=>b[1].rev-a[1].rev).forEach(([k,v])=>{report+=`• ${k}: ${v.qty} sold — ₹${v.rev}\n`;});}
+  report+=`─────────────\nMorning Bites 🌿\nAkota Garden, Vadodara`;
+  shareReportTxt=report;document.getElementById('share-report-msg').textContent=report;document.getElementById('modal-share-report').classList.add('open');
+}
+function sendReportWA(){const phone=prompt('Enter phone number:');if(phone&&phone.length>=10)window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(shareReportTxt)}`,'_blank');else toast('No phone.');}
+function copyReport(){navigator.clipboard.writeText(shareReportTxt).then(()=>{toast('📋 Copied!');closeModals();}).catch(()=>toast('Could not copy.'));}
+
+// SUB REPORTS
+function renderSubReports(){
+  const active=customers.filter(c=>c.status==='active');const cancelled=customers.filter(c=>c.status==='cancelled');
+  const totalUsed=active.reduce((s,c)=>s+c.used,0);
+  const getPrice=c=>packages.find(p=>p.id==c.package_id)?.price||350;
+  const revenue=active.reduce((s,c)=>s+(((c.renew_count||0)+1)*getPrice(c)),0);
+  const cashRev=active.filter(c=>c.payment_mode==='cash').reduce((s,c)=>s+(((c.renew_count||0)+1)*getPrice(c)),0);
+  const upiRev=active.filter(c=>c.payment_mode==='upi'||!c.payment_mode).reduce((s,c)=>s+(((c.renew_count||0)+1)*getPrice(c)),0);
+  const qrRev=active.filter(c=>c.payment_mode==='scanpay').reduce((s,c)=>s+(((c.renew_count||0)+1)*getPrice(c)),0);
+  document.getElementById('sr-total').textContent=active.length;document.getElementById('sr-active').textContent=active.filter(c=>c.used<c.total).length;document.getElementById('sr-meals').textContent=totalUsed;document.getElementById('sr-rev').textContent='₹'+revenue.toLocaleString('en-IN');document.getElementById('sr-cash').textContent='₹'+cashRev.toLocaleString('en-IN');document.getElementById('sr-upi').textContent='₹'+upiRev.toLocaleString('en-IN');document.getElementById('sr-qr').textContent='₹'+qrRev.toLocaleString('en-IN');
+  const alerts=active.filter(c=>(c.total-c.used)<=2);
+  document.getElementById('sr-renewals').innerHTML=alerts.length?alerts.map(c=>{const left=c.total-c.used;return `<div class="card"><div class="crow"><div><div class="cname">${esc(c.name)}</div><div class="cphone">📞 ${esc(c.phone)}</div></div><span class="badge ${left<=0?'b-done':'b-low'}">${left<=0?'Pack done':left+' left'}</span></div><div class="acts" style="margin-top:8px;"><button class="btn-sm" onclick="openNotify(${c.id})">📩</button><button class="btn-renew" onclick="renewPack(${c.id})" ${left>0?'disabled':''}>🔄 Renew</button></div></div>`;}).join(''):`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">✅ All good!</div>`;
+  const newC=active.filter(c=>!c.renew_count||c.renew_count===0);
+  document.getElementById('sr-new').innerHTML=newC.length?newC.map(c=>`<div class="card"><div class="crow"><div><div class="cname">${esc(c.name)}</div><div class="cphone">📞 ${esc(c.phone)} · ${c.join_date||'—'} · ${getPkgName(c)}</div></div><span class="badge b-act">🆕</span></div><div style="font-size:11px;color:var(--t3);margin-top:4px;">${c.used}/${c.total} meals</div></div>`).join(''):`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No new customers.</div>`;
+  const renC=active.filter(c=>c.renew_count&&c.renew_count>0);
+  document.getElementById('sr-renewed').innerHTML=renC.length?renC.map(c=>`<div class="card"><div class="crow"><div><div class="cname">${esc(c.name)}</div><div class="cphone">Last renewed: ${c.last_renewed||'—'}</div></div><span class="badge" style="background:#f3e5f5;color:#6a1b9a;">🔄 ×${c.renew_count}</span></div><div class="acts" style="margin-top:6px;"><button class="btn-sm" onclick="openAudit(${c.id})">📋</button></div></div>`).join(''):`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No renewals.</div>`;
+  document.getElementById('sr-cancelled').innerHTML=cancelled.length?cancelled.map(c=>`<div class="card cc"><div class="crow"><div><div class="cname">${esc(c.name)}</div><div class="cphone">📞 ${esc(c.phone)}</div></div><span class="badge b-cancel">❌</span></div><div class="acts" style="margin-top:6px;"><button class="btn-sm" onclick="openAudit(${c.id})">📋</button></div></div>`).join(''):`<div class="card" style="text-align:center;color:#888;padding:14px;font-size:13px;">No cancellations.</div>`;
+}
+
+// MENU ADMIN
+function renderMenuAdmin(){
+  const el=document.getElementById('menu-admin-list');
+  if(!menuItems.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🍽️</div><p>No menu items yet.</p></div>`;return;}
+  const sorted=[...menuItems].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  el.innerHTML=sorted.map(item=>`<div class="menu-admin-item">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <input class="order-inp" type="number" value="${item.sort_order||0}" min="1" onchange="updateMenuOrder(${item.id},this.value)"/>
+      <div class="moi-name" style="flex:1;">${esc(item.name)}</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label class="menu-toggle"><input class="ti" type="checkbox" ${item.is_active?'checked':''} onchange="toggleMenuItem(${item.id},this.checked)"/><div class="tt"></div><div class="th"></div></label>
+        <span style="font-size:10px;color:${item.is_active?'var(--gd)':'var(--t3)'};">${item.is_active?'Active':'Inactive'}</span>
+        <button class="btn-edit" onclick="openEditMenuItem(${item.id})">✏️</button>
+        <button class="btn-delete" onclick="deleteMenuItem(${item.id})">🗑️</button>
+      </div>
+    </div>
+    ${(item.options||[]).map(o=>`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);padding:3px 0;border-bottom:1px solid #f5f5f5;">${esc(o.label||'Standard')}<span>₹${o.price}</span></div>`).join('')}
+  </div>`).join('');
+}
+async function updateMenuOrder(id,val){const order=parseInt(val)||1;try{await dbUpd('menu_items',id,{sort_order:order});const item=menuItems.find(x=>x.id===id);if(item)item.sort_order=order;renderMenuAdmin();toast('Order updated!');}catch(e){toast('Error!');}}
+async function toggleMenuItem(id,active){try{await dbUpd('menu_items',id,{is_active:active});const item=menuItems.find(x=>x.id===id);if(item)item.is_active=active;renderMenuAdmin();toast(active?'Active!':'Inactive!');}catch(e){toast('Error!');}}
+function openAddMenuItem(){miOptCnt=1;document.getElementById('mi-name').value='';document.getElementById('mi-options-wrap').innerHTML=buildOptRow('mi',0,'','');document.getElementById('modal-add-menu').classList.add('open');}
+function buildOptRow(pfx,i,label,price){return `<div class="fg-grp"><label>Option ${i+1}</label><div style="display:flex;gap:6px;"><input type="text" id="${pfx}-opt-label-${i}" value="${label}" placeholder="Label (blank = single item)" style="flex:1;" autocomplete="off"/><input type="number" id="${pfx}-opt-price-${i}" value="${price}" placeholder="₹" style="width:80px;" autocomplete="off"/></div></div>`;}
+function addMenuOptField(pfx){const wrap=document.getElementById(`${pfx}-options-wrap`);const i=pfx==='mi'?miOptCnt:emiOptCnt;wrap.insertAdjacentHTML('beforeend',buildOptRow(pfx,i,'',''));if(pfx==='mi')miOptCnt++;else emiOptCnt++;}
+function getOpts(pfx,cnt){const opts=[];for(let i=0;i<cnt;i++){const label=document.getElementById(`${pfx}-opt-label-${i}`)?.value.trim()||'';const price=parseInt(document.getElementById(`${pfx}-opt-price-${i}`)?.value||'0');if(price>0)opts.push({label,price});}return opts;}
+async function saveMenuItem(){const name=document.getElementById('mi-name').value.trim();if(!name){toast('Enter name!');return;}const options=getOpts('mi',miOptCnt);if(!options.length){toast('Add at least one option!');return;}const maxOrder=menuItems.reduce((m,x)=>Math.max(m,x.sort_order||0),0);try{const r=await dbIns('menu_items',{name,options,is_active:true,sort_order:maxOrder+1});menuItems.push(r[0]);renderMenuAdmin();closeModals();toast(`✅ ${name} added!`);}catch(e){toast('Error!');}}
+function openEditMenuItem(id){editMenuId=id;const item=menuItems.find(x=>x.id===id);document.getElementById('emi-name').value=item.name||'';const opts=item.options||[];emiOptCnt=Math.max(opts.length,1);document.getElementById('emi-options-wrap').innerHTML=opts.length?opts.map((o,i)=>buildOptRow('emi',i,o.label||'',o.price||'')).join(''):buildOptRow('emi',0,'','');document.getElementById('modal-edit-menu').classList.add('open');}
+async function saveEditMenuItem(){const name=document.getElementById('emi-name').value.trim();if(!name){toast('Enter name!');return;}const options=getOpts('emi',emiOptCnt);if(!options.length){toast('Add at least one option!');return;}try{await dbUpd('menu_items',editMenuId,{name,options});const item=menuItems.find(x=>x.id===editMenuId);if(item){item.name=name;item.options=options;}renderMenuAdmin();closeModals();toast('✅ Updated!');}catch(e){toast('Error!');}}
+async function deleteMenuItem(id){if(!confirm('Remove this item?'))return;try{await dbUpd('menu_items',id,{is_active:false});menuItems=menuItems.filter(x=>x.id!==id);renderMenuAdmin();toast('Removed.');}catch(e){toast('Error!');}}
+
+// MESSAGES
+function buildMsgs(c){const left=c.total-c.used;const isRenew=c.renew_count&&c.renew_count>0;const packLine=isRenew?`Renewal #${c.renew_count} (${c.pack_start_date||todayStr()})\n\n`:'';return{update:`Hello ${c.name},\n\nHere is your Morning Bites meal update:\n${packLine}✅ Meals used so far: ${c.used}\n🥗 Meals remaining: ${left}\n📦 Total meals in pack: ${c.total}\n\nEnjoy your fresh sprouts every morning and stay healthy!\n\nTiming: 6:30 AM to 9:00 AM\nCall us: 9099172237 / 9429929822\n\nThank you,\nMorning Bites 🌿`,renew:`Hello ${c.name},\n\nYou currently have ${left} meal(s) remaining.\n\nRenew your pack today!\n🎉 10 fresh sprout meals for just ₹${packages.find(p=>p.id==c.package_id)?.price||350} (Save ₹50!)\n\n📍 Akota Garden, Vadodara\n⏰ 6:30 AM to 9:00 AM\n📞 9099172237 / 9429929822\n\nThank you,\nMorning Bites 🌿`,done:`Hello ${c.name},\n\nAll ${c.total} meals have been used.\n\nRenew today!\n🎉 10 fresh sprout meals for just ₹${packages.find(p=>p.id==c.package_id)?.price||350}!\n\n📍 Akota Garden, Vadodara\n⏰ 6:30 AM to 9:00 AM\n📞 9099172237 / 9429929822\n\nThank you,\nMorning Bites 🌿`};}
+function buildWelcomeMsg(name,total,sd,renewCount,pkg){const isRenew=renewCount>0;return `Hello ${name},\n\nWelcome${isRenew?' back':''} to Morning Bites! 🌿\n\nYour ${pkg?.name||'Sprouts Salad'} subscription is now ${isRenew?`renewed (Renewal #${renewCount+1})`:'active'}!\n\n📦 Pack: ${total} meals\n💰 Amount: ₹${pkg?.price||350}\n📅 Start date: ${sd}\n\nEnjoy fresh sprouts daily!\n✅ Healthy • Hygienic • Tasty\n\n📍 Akota Garden, Near Radha Krishan Circle, Akota, Vadodara\n⏰ 6:30 AM to 9:00 AM\n📞 9099172237 / 9429929822\n\nSee you tomorrow morning!\nMorning Bites 🌿`;}
+function buildPromoMsg(name){return `Hello ${name},\n\nThank you for visiting Morning Bites today! 🌿\n\nSubscribe to our Fresh Sprouts Salad Pack!\n\n🎉 10 Meals Pack — just ₹350!\n✅ Fresh Sprouts Salad Daily\n✅ Healthy • Hygienic • Tasty\n✅ Only ₹35/meal (Save ₹50!)\n\n📍 Akota Garden, Near Radha Krishan Circle, Akota, Vadodara\n⏰ 6:30 AM to 9:00 AM\n📞 9099172237 / 9429929822\n\nJoin us tomorrow!\nMorning Bites 🌿`;}
+
+function openNotify(id){const c=customers.find(x=>x.id===id);notifyPhone=c.phone;notifyMsgs=buildMsgs(c);notifyType='update';document.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',i===0));document.getElementById('notify-msg').textContent=notifyMsgs['update'];document.getElementById('modal-notify').classList.add('open');}
+function setMsgType(t){notifyType=t;const types=['update','renew','done'];document.querySelectorAll('.mtab').forEach((el,i)=>el.classList.toggle('active',types[i]===t));document.getElementById('notify-msg').textContent=notifyMsgs[t];}
+function sendNotifyWA(){if(notifyPhone)window.open(`https://wa.me/91${notifyPhone}?text=${encodeURIComponent(notifyMsgs[notifyType])}`,'_blank');else toast('No phone number!');}
+function copyNotify(){navigator.clipboard.writeText(notifyMsgs[notifyType]).then(()=>{toast('📋 Copied!');closeModals();}).catch(()=>toast('Could not copy.'));}
+function openPromoModal(id){const w=walkins.find(x=>x.id===id);promoPhone=w.phone||'';promoMsgTxt=buildPromoMsg(w.name);document.getElementById('promo-msg').textContent=promoMsgTxt;document.getElementById('modal-promo').classList.add('open');}
+function sendPromoWA(){if(promoPhone)window.open(`https://wa.me/91${promoPhone}?text=${encodeURIComponent(promoMsgTxt)}`,'_blank');else toast('No phone number!');}
+function copyPromo(){navigator.clipboard.writeText(promoMsgTxt).then(()=>{toast('📋 Copied!');closeModals();}).catch(()=>toast('Could not copy.'));}
+function sendWelcomeWA(){if(welcomePhone)window.open(`https://wa.me/91${welcomePhone}?text=${encodeURIComponent(welcomeMsgTxt)}`,'_blank');else toast('No phone number!');}
+function copyWelcome(){navigator.clipboard.writeText(welcomeMsgTxt).then(()=>{toast('📋 Copied!');closeModals();}).catch(()=>toast('Could not copy.'));}
+
+async function openAudit(id){
+  const c=customers.find(x=>x.id===id);document.getElementById('audit-cname').textContent=c.name;document.getElementById('audit-body').innerHTML=`<div class="loading"><div class="spinner"></div>Loading...</div>`;document.getElementById('modal-audit').classList.add('open');
+  try{
+    const[logs,skips]=await Promise.all([dbGet('meal_logs',`select=*&customer_id=eq.${id}&order=logged_at.asc`),dbGet('meal_skips',`select=*&customer_id=eq.${id}&order=skip_date.asc`)]);
+    if(!logs.length&&!skips.length){document.getElementById('audit-body').innerHTML=`<div style="text-align:center;color:var(--t3);padding:20px;font-size:12px;">No history yet.</div>`;return;}
+    const packs={};logs.forEach(l=>{const p=l.pack_number||1;if(!packs[p])packs[p]=[];packs[p].push(l);});
+    let html='';
+    Object.keys(packs).sort((a,b)=>b-a).forEach(p=>{const pn=parseInt(p);const isC=packs[p].some(l=>l.action==='cancelled');let lbl=pn===1?'Pack 1 — New Subscription':`Pack ${pn} — Renewal #${pn-1}`;if(isC)lbl+=' (Cancelled)';html+=`<div class="audit-pack-head ${isC?'cc':''}">${pn===1?'🌱':'🔄'} ${lbl}</div>`;[...packs[p]].reverse().forEach(l=>{const dt=new Date(l.logged_at);const time=dt.toLocaleDateString('en-IN')+' '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});let icon='✅',label=`Meal #${l.meal_number} used`;if(l.action==='undone'){icon='↩';label=`Meal #${l.meal_number} undone`;}if(l.action==='renewed'){icon='🔄';label='Pack renewed';}if(l.action==='cancelled'){icon='❌';label='Subscription cancelled';}if(l.action==='resubscribed'){icon='🔁';label='Re-subscribed';}html+=`<div class="audit-row"><span>${icon} ${label}</span><span class="audit-time">${time}</span></div>`;});});
+    if(skips.length){html+=`<div class="audit-pack-head">⏭️ Skip History</div>`;[...skips].reverse().forEach(s=>{html+=`<div class="audit-row"><span>${s.unskipped?'↩ Unskipped':'⏭️ Skipped'} — ${s.skip_date}</span><span class="audit-time">${s.unskipped?'Removed':''}</span></div>`;});}
+    document.getElementById('audit-body').innerHTML=html;
+  }catch(e){document.getElementById('audit-body').innerHTML=`<div style="text-align:center;color:var(--t3);padding:20px;">Error.</div>`;}
+}
+
+function switchTab(tab){currentTab=tab;clearSearch();const tabs=['dashboard','billing','bill-reports','sub-dashboard','walkins','subscribed','sub-reports','packages','menu'];tabs.forEach(t=>{document.getElementById('tab-'+t).style.display=t===tab?'block':'none';document.querySelectorAll('.tb')[tabs.indexOf(t)].classList.toggle('active',t===tab);});loadAll();}
+function closeModals(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)closeModals();}));
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+
+async function seedMenuIfEmpty(){
+  if(menuItems.length>0)return;
+  const items=[{name:'Thepla',options:[{label:'1 piece',price:15},{label:'2 pieces',price:25},{label:'3 pieces',price:35}],sort_order:1},{name:'Muthiya',options:[{label:'Standard',price:30}],sort_order:2},{name:'Masala Paratha',options:[{label:'1 piece',price:15},{label:'2 pieces',price:30}],sort_order:3},{name:'Sev Paratha',options:[{label:'1 piece',price:40}],sort_order:4},{name:'Sprouts Bhel',options:[{label:'Standard',price:40}],sort_order:5},{name:'Tea',options:[{label:'1 cup',price:10}],sort_order:6}];
+  try{for(const item of items){const r=await dbIns('menu_items',{...item,is_active:true});menuItems.push(r[0]);}if(currentTab==='menu')renderMenuAdmin();if(currentTab==='billing')renderBillingMenu();toast('✅ Menu added!');}catch(e){}
+}
+loadAll().then(()=>seedMenuIfEmpty());
+</script>
+</body>
+</html>

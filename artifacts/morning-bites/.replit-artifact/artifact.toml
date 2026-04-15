@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Morning Bites Tracker"
+version = "1.0.0"
+id = "artifacts/morning-bites"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18323
+
+[services.development]
+run = "pnpm --filter @workspace/morning-bites run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/morning-bites", "run", "build" ]
+publicDir = "artifacts/morning-bites/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18323"
+BASE_PATH = "/"
