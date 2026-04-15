@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MessageCircle, Edit, Trash2, UserPlus, Search } from "lucide-react";
+import { Plus, MessageCircle, Edit, Trash2, UserPlus, Search, CalendarDays } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -107,7 +107,6 @@ export default function Walkins() {
       setIsSubModalOpen(false);
       refresh();
       
-      // WhatsApp message logic could go here
       const msg = `Hello ${subName}! 🌱\n\nWelcome to Morning Bites Subscription! 🎉\n\nYour pack is now active:\n✅ 10 fresh meals ready\n\nThank you for subscribing! See you every morning.\n\nMorning Bites 🌿`;
       window.open(`https://wa.me/91${subPhone}?text=${encodeURIComponent(msg)}`, '_blank');
       
@@ -134,9 +133,9 @@ export default function Walkins() {
   };
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold flex items-center gap-2"><UserPlus className="w-5 h-5 text-primary" /> Walk-ins</h2>
+        <h2 className="text-2xl font-bold font-serif">Walk-ins</h2>
         <Button 
           onClick={() => {
             setEditingId(null);
@@ -144,17 +143,20 @@ export default function Walkins() {
             setPhone("");
             setIsWalkinModalOpen(true);
           }} 
-          className="rounded-full shadow-md"
+          className="rounded-full shadow-md font-bold px-5"
         >
-          <Plus className="w-4 h-4 mr-1" /> Add Walk-in
+          <Plus className="w-5 h-5 mr-1.5" /> Add New
         </Button>
       </div>
 
-      <div className="space-y-3 pb-8">
+      <div className="space-y-4 pb-8">
         {filteredWalkins.length === 0 ? (
-          <div className="text-center p-8 text-muted-foreground flex flex-col items-center">
-            <Search className="w-10 h-10 opacity-20 mb-2" />
-            <p>No walk-ins found.</p>
+          <div className="text-center p-12 bg-muted/30 rounded-3xl border border-dashed border-border flex flex-col items-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-muted-foreground opacity-50" />
+            </div>
+            <h3 className="font-bold text-lg mb-1">No walk-ins found</h3>
+            <p className="text-muted-foreground text-sm">Add a new walk-in or clear your search.</p>
           </div>
         ) : (
           filteredWalkins.map(w => {
@@ -163,42 +165,52 @@ export default function Walkins() {
             const isPrevSub = cust?.status === 'cancelled';
             
             return (
-              <Card key={w.id} className="border-border shadow-sm">
-                <CardContent className="p-4 flex flex-col gap-3">
+              <Card key={w.id} className="border border-border shadow-sm hover:shadow-md transition-all overflow-hidden bg-card group">
+                <CardContent className="p-5 flex flex-col gap-4">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-bold text-base">{w.name}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{w.phone}</div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-serif font-bold text-xl shrink-0 mt-1">
+                        {w.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-bold font-serif text-xl leading-tight">{w.name}</div>
+                        <div className="text-sm font-medium text-muted-foreground mt-0.5">{w.phone}</div>
+                        <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-muted-foreground/80">
+                          <CalendarDays className="w-3.5 h-3.5" /> {w.visit_date}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap justify-end gap-1 max-w-[150px]">
-                      <Badge variant="outline" className="bg-muted/50 text-[10px]">Walk-in</Badge>
-                      {isSubbed && <Badge className="bg-primary text-primary-foreground text-[10px]">Subscribed ✓</Badge>}
-                      {isPrevSub && <Badge variant="secondary" className="text-[10px]">Prev. Sub</Badge>}
+                    <div className="flex flex-col items-end gap-2">
+                      {isSubbed && <Badge className="bg-primary text-primary-foreground font-bold shadow-sm">Subscribed ✓</Badge>}
+                      {isPrevSub && <Badge className="bg-secondary text-secondary-foreground font-bold shadow-sm">Prev. Sub</Badge>}
+                      {!isSubbed && !isPrevSub && <Badge variant="outline" className="bg-muted font-bold text-muted-foreground border-transparent">Walk-in</Badge>}
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 mt-2 pt-3 border-t border-border">
+                  <div className="flex items-center gap-3 pt-4 border-t border-border">
                     {!isSubbed && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs font-semibold" onClick={() => handleOpenSubscribe(w)}>
-                        Subscribe
+                      <Button className="flex-1 rounded-xl h-11 font-bold text-[13px] shadow-sm tracking-wide" onClick={() => handleOpenSubscribe(w)}>
+                        Subscribe Now
                       </Button>
                     )}
                     {!isSubbed && (
-                      <Button size="sm" variant="outline" className="flex-1 rounded-xl h-9 text-xs font-semibold border-green-200 text-green-700 bg-green-50 hover:bg-green-100 dark:border-green-900/50 dark:text-green-400 dark:bg-green-900/20" onClick={() => handlePromote(w)}>
-                        <MessageCircle className="w-3 h-3 mr-1" /> Promote
+                      <Button variant="outline" className="flex-1 rounded-xl h-11 font-bold text-[13px] border-secondary/50 text-secondary-foreground bg-secondary/10 hover:bg-secondary/20 tracking-wide" onClick={() => handlePromote(w)}>
+                        <MessageCircle className="w-4 h-4 mr-2" /> Promote
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl ml-auto" onClick={() => {
-                      setEditingId(w.id);
-                      setName(w.name);
-                      setPhone(w.phone);
-                      setIsWalkinModalOpen(true);
-                    }}>
-                      <Edit className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => handleDelete(w.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-2 ml-auto">
+                      <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-border bg-card hover:bg-muted" onClick={() => {
+                        setEditingId(w.id);
+                        setName(w.name);
+                        setPhone(w.phone);
+                        setIsWalkinModalOpen(true);
+                      }}>
+                        <Edit className="w-4 h-4 text-foreground" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl border-red-200 text-red-600 bg-red-50 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-400" onClick={() => handleDelete(w.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -207,69 +219,72 @@ export default function Walkins() {
         )}
       </div>
 
-      {/* Add/Edit Walk-in Modal */}
       <Dialog open={isWalkinModalOpen} onOpenChange={setIsWalkinModalOpen}>
-        <DialogContent className="sm:max-w-md w-[90%] rounded-2xl">
+        <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Walk-in" : "Add Walk-in"}</DialogTitle>
+            <DialogTitle className="text-xl font-serif">{editingId ? "Edit Walk-in" : "Add Walk-in"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-5 py-4">
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input placeholder="Enter name" value={name} onChange={e => setName(e.target.value)} />
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Name</Label>
+              <Input placeholder="Enter name" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-xl text-lg px-4 bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary" />
             </div>
             <div className="space-y-2">
-              <Label>Phone Number</Label>
-              <Input type="tel" placeholder="Enter 10-digit number" value={phone} onChange={e => setPhone(e.target.value)} />
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Phone Number</Label>
+              <Input type="tel" placeholder="10-digit number" value={phone} onChange={e => setPhone(e.target.value)} className="h-14 rounded-xl text-lg px-4 bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary font-mono tracking-wider" />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveWalkin} className="w-full h-12 text-lg rounded-xl shadow-lg">Save</Button>
+            <Button onClick={handleSaveWalkin} className="w-full h-14 text-lg rounded-xl shadow-lg font-bold">Save Details</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Subscribe Modal */}
       <Dialog open={isSubModalOpen} onOpenChange={setIsSubModalOpen}>
-        <DialogContent className="sm:max-w-md w-[90%] rounded-2xl">
+        <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle>Subscribe {subName}</DialogTitle>
+            <DialogTitle className="text-xl font-serif">Subscribe {subName}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-6 py-4">
             <div className="space-y-2">
-              <Label>Package</Label>
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Select Package</Label>
               <Select value={subPkgId} onValueChange={setSubPkgId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a package" />
+                <SelectTrigger className="h-14 rounded-xl text-base px-4 bg-muted/50 border-transparent focus:bg-background focus:border-primary">
+                  <SelectValue placeholder="Choose a package" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   {activePackages.map(p => (
-                    <SelectItem key={p.id} value={p.id.toString()}>{p.name} - ₹{p.price}</SelectItem>
+                    <SelectItem key={p.id} value={p.id.toString()} className="rounded-lg py-3">
+                      <div className="flex justify-between items-center w-full">
+                        <span className="font-bold">{p.name}</span>
+                        <span className="text-primary font-bold ml-4">₹{p.price}</span>
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-3 pt-2">
-              <Label>Payment Mode</Label>
-              <RadioGroup value={subPayMode} onValueChange={setSubPayMode} className="grid grid-cols-3 gap-2">
-                <div className="flex items-center justify-center">
+            <div className="space-y-3">
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Payment Mode</Label>
+              <RadioGroup value={subPayMode} onValueChange={setSubPayMode} className="grid grid-cols-3 gap-3">
+                <div className="flex">
                   <RadioGroupItem value="cash" id="s-cash" className="peer sr-only" />
-                  <Label htmlFor="s-cash" className="flex w-full items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer">Cash</Label>
+                  <Label htmlFor="s-cash" className="flex flex-1 items-center justify-center rounded-xl border-2 border-border bg-card p-4 font-bold hover:bg-muted peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-primary cursor-pointer transition-all">Cash</Label>
                 </div>
-                <div className="flex items-center justify-center">
+                <div className="flex">
                   <RadioGroupItem value="upi" id="s-upi" className="peer sr-only" />
-                  <Label htmlFor="s-upi" className="flex w-full items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer">UPI</Label>
+                  <Label htmlFor="s-upi" className="flex flex-1 items-center justify-center rounded-xl border-2 border-border bg-card p-4 font-bold hover:bg-muted peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-primary cursor-pointer transition-all">UPI</Label>
                 </div>
-                <div className="flex items-center justify-center">
+                <div className="flex">
                   <RadioGroupItem value="scanpay" id="s-scan" className="peer sr-only" />
-                  <Label htmlFor="s-scan" className="flex w-full items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer">Scan</Label>
+                  <Label htmlFor="s-scan" className="flex flex-1 items-center justify-center rounded-xl border-2 border-border bg-card p-4 font-bold hover:bg-muted peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-primary cursor-pointer transition-all">Scan</Label>
                 </div>
               </RadioGroup>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSubscribe} className="w-full h-12 text-lg rounded-xl shadow-lg">Activate Pack</Button>
+            <Button onClick={handleSubscribe} className="w-full h-14 text-lg rounded-xl shadow-lg font-bold">Activate Package</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

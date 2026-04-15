@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Check, Undo2, SkipForward, RefreshCw, Trash2, Edit, Send, ChevronLeft, ChevronRight, CalendarDays, History } from "lucide-react";
+import { Check, Undo2, SkipForward, RefreshCw, Trash2, Edit, Send, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function Subscribed() {
@@ -29,7 +29,7 @@ export default function Subscribed() {
   const [editPkg, setEditPkg] = useState("");
   const [editMode, setEditMode] = useState<any>("");
 
-  const [weekOffset, setWeekOffset] = useState<Record<number, number>>({}); // Customer ID -> week offset
+  const [weekOffset, setWeekOffset] = useState<Record<number, number>>({});
 
   const activeSubs = customers.filter(c => !c.is_deleted);
   
@@ -42,7 +42,7 @@ export default function Subscribed() {
     if (filter === "done") return c.status === 'active' && c.used >= c.total;
     if (filter === "new") return c.status === 'active' && c.renew_count === 0;
     if (filter === "renewed") return c.status === 'active' && c.renew_count > 0;
-    return true; // all
+    return true;
   });
 
   const handleUseMeal = async (c: any) => {
@@ -211,7 +211,6 @@ export default function Subscribed() {
 
   const getWeekDays = (offset: number) => {
     const today = new Date();
-    // Get Monday of current week
     const currentDay = today.getDay();
     const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
     const monday = new Date(today);
@@ -224,7 +223,7 @@ export default function Subscribed() {
       days.push({
         date: d,
         iso: d.toISOString().split('T')[0],
-        dayStr: d.toLocaleDateString('en-IN', { weekday: 'short' }).charAt(0), // M, T, W...
+        dayStr: d.toLocaleDateString('en-IN', { weekday: 'short' }).charAt(0),
         dateStr: d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit' })
       });
     }
@@ -234,35 +233,36 @@ export default function Subscribed() {
   const filters = [
     { id: "all", label: "All" },
     { id: "active", label: "Active" },
-    { id: "low", label: "⚠️ Low" },
+    { id: "low", label: "Low" },
     { id: "done", label: "Done" },
-    { id: "new", label: "🆕 New" },
-    { id: "renewed", label: "🔄 Renewed" }
+    { id: "new", label: "New" },
+    { id: "renewed", label: "Renewed" }
   ];
 
   return (
-    <div className="flex flex-col gap-4 animate-in fade-in duration-300 pb-8">
-      <div className="overflow-x-auto hide-scrollbar -mx-4 px-4 pb-1">
-        <div className="flex gap-2 w-max">
-          {filters.map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                filter === f.id 
-                  ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col gap-5 animate-in fade-in duration-300 pb-8">
+      {/* Filter Segmented Control */}
+      <div className="bg-muted p-1.5 rounded-2xl flex overflow-x-auto hide-scrollbar shadow-inner border border-border">
+        {filters.map(f => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`flex-1 min-w-[70px] px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+              filter === f.id 
+                ? "bg-white dark:bg-card text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10" 
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
-      <div className="space-y-4 mt-2">
+      <div className="space-y-5">
         {filteredSubs.length === 0 ? (
-          <div className="text-center p-8 text-muted-foreground">No subscribers match this filter.</div>
+          <div className="text-center p-12 text-muted-foreground bg-muted/30 rounded-3xl border border-dashed">
+            No subscribers match this filter.
+          </div>
         ) : (
           filteredSubs.map(c => {
             const pkg = packages.find(p => p.id === c.package_id);
@@ -275,52 +275,65 @@ export default function Subscribed() {
             const weekDays = getWeekDays(offset);
             
             return (
-              <Card key={c.id} className={`border-border shadow-sm ${c.status === 'cancelled' ? 'opacity-70' : ''}`}>
-                <CardContent className="p-4 flex flex-col gap-4">
+              <Card key={c.id} className={`border border-border shadow-sm overflow-hidden transition-all duration-200 ${c.status === 'cancelled' ? 'opacity-60 grayscale-[0.5]' : 'hover:shadow-md'}`}>
+                {/* Accent Top Bar based on status */}
+                <div className={`h-1.5 w-full ${isDone ? 'bg-gray-400' : isLow ? 'bg-secondary' : 'bg-primary'}`}></div>
+                
+                <CardContent className="p-5 flex flex-col gap-5">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-bold text-lg leading-none">{c.name}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{c.phone} • Joined: {c.join_date}</div>
+                      <div className="font-bold font-serif text-xl leading-tight text-foreground">{c.name}</div>
+                      <div className="text-sm font-medium text-muted-foreground mt-0.5">{c.phone}</div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1.5">
                       {c.status === 'cancelled' ? (
-                        <Badge variant="destructive">Cancelled</Badge>
+                        <Badge variant="destructive" className="font-bold tracking-wide">Cancelled</Badge>
                       ) : isDone ? (
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300">Pack Done</Badge>
+                        <Badge className="bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300 font-bold px-3 py-1 shadow-none">Pack Done</Badge>
                       ) : isLow ? (
-                        <Badge className="bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-800">⚠️ {c.total - c.used} left</Badge>
+                        <Badge className="bg-secondary text-secondary-foreground font-bold px-3 py-1 shadow-sm ring-1 ring-secondary/50">Low: {c.total - c.used} left</Badge>
                       ) : (
-                        <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/40 dark:text-green-400 dark:border-green-800">{c.total - c.used} left</Badge>
+                        <Badge className="bg-primary/10 text-primary hover:bg-primary/20 font-bold px-3 py-1 shadow-none border-primary/20">{c.total - c.used} left</Badge>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
-                    {isWalkin && <Badge variant="outline" className="text-[10px] bg-muted/50">Walk-in</Badge>}
-                    <Badge variant="outline" className="text-[10px] bg-primary text-primary-foreground border-primary">Subscribed ✓</Badge>
+                  {/* Chips */}
+                  <div className="flex flex-wrap gap-2">
+                    {isWalkin && <Badge variant="secondary" className="bg-muted text-muted-foreground font-semibold text-[11px] rounded-lg shadow-none">Walk-in</Badge>}
                     {c.renew_count === 0 ? (
-                      <Badge variant="outline" className="text-[10px] bg-blue-50/50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/50">🆕 New</Badge>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 font-semibold text-[11px] rounded-lg">New User</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px] bg-purple-50/50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-900/50">🔄 ×{c.renew_count}</Badge>
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 font-semibold text-[11px] rounded-lg">Renewed ×{c.renew_count}</Badge>
                     )}
-                    {pkg && <Badge variant="outline" className="text-[10px]">{pkg.name}</Badge>}
-                    <Badge variant="outline" className="text-[10px] uppercase">{c.payment_mode}</Badge>
+                    {pkg && <Badge variant="outline" className="font-semibold text-[11px] rounded-lg bg-card">{pkg.name}</Badge>}
+                    <Badge variant="outline" className="font-semibold text-[11px] rounded-lg uppercase bg-card">{c.payment_mode}</Badge>
                   </div>
 
-                  <div className="bg-muted/30 rounded-xl p-3 border border-border">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-xs font-semibold">Schedule</div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setWeekOffset(p => ({...p, [c.id]: offset - 1}))}>
-                          <ChevronLeft className="w-3 h-3" />
+                  {/* Progress Bar */}
+                  <div className="space-y-2 bg-muted/20 p-3 rounded-xl border border-border">
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      <span>Meals Used</span>
+                      <span className="text-foreground">{c.used} / {c.total}</span>
+                    </div>
+                    <Progress value={progressPercent} className={`h-3 bg-muted ${isDone ? '[&>div]:bg-gray-400' : isLow ? '[&>div]:bg-secondary' : '[&>div]:bg-primary'}`} />
+                  </div>
+
+                  {/* Schedule */}
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex justify-between items-center px-3 py-2 bg-muted/30 border-b border-border">
+                      <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Schedule</div>
+                      <div className="flex items-center gap-1 bg-background rounded-lg border border-border">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-muted" onClick={() => setWeekOffset(p => ({...p, [c.id]: offset - 1}))}>
+                          <ChevronLeft className="w-3 h-3 text-foreground" />
                         </Button>
-                        <span className="text-[10px] text-muted-foreground w-12 text-center">{offset === 0 ? 'This Wk' : offset > 0 ? `+${offset} Wk` : `${offset} Wk`}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setWeekOffset(p => ({...p, [c.id]: offset + 1}))}>
-                          <ChevronRight className="w-3 h-3" />
+                        <span className="text-[10px] font-bold text-foreground w-12 text-center">{offset === 0 ? 'This Wk' : offset > 0 ? `+${offset} Wk` : `${offset} Wk`}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-muted" onClick={() => setWeekOffset(p => ({...p, [c.id]: offset + 1}))}>
+                          <ChevronRight className="w-3 h-3 text-foreground" />
                         </Button>
                       </div>
                     </div>
-                    <div className="flex justify-between gap-1">
+                    <div className="flex p-2 gap-1.5 bg-muted/10">
                       {weekDays.map((d, i) => {
                         const isScheduled = c.preferred_days.length === 0 || c.preferred_days.includes(i);
                         const skip = mealSkips.find(s => s.customer_id === c.id && s.skip_date === d.iso && !s.unskipped);
@@ -332,83 +345,82 @@ export default function Subscribed() {
                           <div 
                             key={i} 
                             onClick={() => handleTogglePrefDay(c, i)}
-                            className={`flex flex-col items-center justify-center flex-1 py-1.5 rounded-lg cursor-pointer border transition-colors ${
-                              isSkipped ? 'bg-orange-100 border-orange-300 dark:bg-orange-900/30 dark:border-orange-800' :
-                              isScheduled ? 'bg-primary border-primary text-primary-foreground' : 'bg-background border-border hover:bg-muted text-muted-foreground'
-                            } ${isToday && !isScheduled ? 'ring-2 ring-primary/50' : ''}`}
+                            className={`flex flex-col items-center justify-center flex-1 py-2 rounded-lg cursor-pointer border-2 transition-all duration-200 ${
+                              isSkipped ? 'bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-900/30 dark:border-orange-800/50 dark:text-orange-400' :
+                              isScheduled ? 'bg-primary border-primary text-primary-foreground shadow-md scale-[1.02]' : 'bg-card border-transparent text-muted-foreground hover:border-border'
+                            } ${isToday && !isScheduled ? 'ring-2 ring-primary/30 ring-offset-1 dark:ring-offset-background' : ''}`}
                           >
-                            <div className="text-[10px] font-bold opacity-80">{d.dayStr}</div>
-                            <div className="text-[9px] mt-0.5">{d.dateStr.split('/')[0]}</div>
-                            {isSkipped && <div className="text-[8px] mt-0.5 text-orange-700 dark:text-orange-400 font-bold">⏭</div>}
+                            <div className="text-[11px] font-bold tracking-wide">{d.dayStr}</div>
+                            <div className={`text-[10px] mt-0.5 font-medium ${isScheduled ? 'opacity-90' : 'opacity-60'}`}>{d.dateStr.split('/')[0]}</div>
+                            {isSkipped && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1"></div>}
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span>Progress</span>
-                      <span>{c.used} / {c.total}</span>
+                  {/* Actions */}
+                  <div className="pt-2">
+                    {/* Primary Actions Row */}
+                    <div className="flex gap-3 mb-3">
+                      <Button 
+                        onClick={() => handleUseMeal(c)} 
+                        disabled={isDone || c.status === 'cancelled'}
+                        className="flex-1 h-14 rounded-xl shadow-md font-bold text-lg"
+                      >
+                        <Check className="w-5 h-5 mr-2" /> Mark Used
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleUndo(c)}
+                        disabled={c.used === 0 || c.status === 'cancelled'}
+                        className="w-14 h-14 rounded-xl border-border bg-card hover:bg-muted"
+                      >
+                        <Undo2 className="w-5 h-5 text-foreground" />
+                      </Button>
                     </div>
-                    <Progress value={progressPercent} className="h-2.5" />
-                  </div>
 
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                    <Button 
-                      onClick={() => handleUseMeal(c)} 
-                      disabled={isDone || c.status === 'cancelled'}
-                      className="flex-1 rounded-xl h-10 shadow-sm"
-                    >
-                      <Check className="w-4 h-4 mr-1" /> Use
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleUndo(c)}
-                      disabled={c.used === 0 || c.status === 'cancelled'}
-                      className="w-12 h-10 rounded-xl px-0"
-                    >
-                      <Undo2 className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => { setSkipModal({ open: true, customer: c }); setSkipDate(new Date().toISOString().split('T')[0]); }}
-                      disabled={isDone || c.status === 'cancelled'}
-                      className="w-12 h-10 rounded-xl px-0 border-orange-200 text-orange-600 bg-orange-50 hover:bg-orange-100 dark:border-orange-900/50 dark:bg-orange-900/20 dark:text-orange-400"
-                    >
-                      <SkipForward className="w-4 h-4" />
-                    </Button>
-                    
-                    {isDone ? (
+                    {/* Secondary Actions Row */}
+                    <div className="flex gap-2">
+                      {isDone ? (
+                        <Button 
+                          onClick={() => handleRenew(c)}
+                          disabled={c.status === 'cancelled'}
+                          className="flex-1 h-10 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-sm font-bold"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-1.5" /> Renew
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline"
+                          onClick={() => openNotify(c, isLow ? 'low' : 'meal')}
+                          disabled={c.status === 'cancelled'}
+                          className="flex-1 h-10 rounded-lg border-primary/20 text-primary hover:bg-primary/5 font-semibold"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1.5" /> Notify
+                        </Button>
+                      )}
+                      
                       <Button 
-                        onClick={() => handleRenew(c)}
-                        disabled={c.status === 'cancelled'}
-                        className="flex-1 rounded-xl h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-sm font-bold"
+                        variant="outline" 
+                        onClick={() => { setSkipModal({ open: true, customer: c }); setSkipDate(new Date().toISOString().split('T')[0]); }}
+                        disabled={isDone || c.status === 'cancelled'}
+                        className="w-10 h-10 rounded-lg p-0 border-orange-200 text-orange-600 bg-orange-50 hover:bg-orange-100 dark:border-orange-900/40 dark:bg-orange-900/20 dark:text-orange-400"
+                        title="Skip Meal"
                       >
-                        <RefreshCw className="w-4 h-4 mr-1" /> Renew
+                        <SkipForward className="w-4 h-4" />
                       </Button>
-                    ) : (
-                      <Button 
-                        variant="outline"
-                        onClick={() => openNotify(c, isLow ? 'low' : 'meal')}
-                        disabled={c.status === 'cancelled'}
-                        className="flex-1 rounded-xl h-10 border-primary/30 text-primary hover:bg-primary/10"
-                      >
-                        <Send className="w-4 h-4 mr-1" /> Notify
+                      
+                      <Button variant="outline" className="w-10 h-10 rounded-lg p-0 border-border bg-card hover:bg-muted" onClick={() => openEdit(c)} title="Edit">
+                        <Edit className="w-4 h-4 text-foreground" />
                       </Button>
-                    )}
-                    
-                    <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl" onClick={() => openEdit(c)}>
-                      <Edit className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                    {c.status !== 'cancelled' && (
-                      <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-orange-500 hover:text-orange-600 hover:bg-orange-50" onClick={() => handleCancel(c)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl" onClick={() => handleDelete(c)}>
-                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive hover:bg-destructive/10" />
-                    </Button>
+                      
+                      {c.status !== 'cancelled' && (
+                        <Button variant="outline" className="w-10 h-10 rounded-lg p-0 border-red-200 text-red-600 bg-red-50 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-400" onClick={() => handleCancel(c)} title="Cancel Sub">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -417,97 +429,95 @@ export default function Subscribed() {
         )}
       </div>
 
+      {/* Modals remain mostly the same structurally but use our theme classes */}
       <Dialog open={notifyModal.open} onOpenChange={(o) => !o && setNotifyModal({...notifyModal, open: false})}>
-        <DialogContent className="sm:max-w-md w-[90%] rounded-2xl">
+        <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle>Send Notification</DialogTitle>
+            <DialogTitle className="text-xl font-serif">Send Notification</DialogTitle>
           </DialogHeader>
-          <div className="py-4 text-sm text-muted-foreground">
-            Send a pre-formatted WhatsApp message to {notifyModal.customer?.name}.
+          <div className="py-4 text-sm text-muted-foreground font-medium">
+            Send a pre-formatted WhatsApp message to <span className="font-bold text-foreground">{notifyModal.customer?.name}</span>.
           </div>
           <DialogFooter>
-            <Button onClick={sendWhatsApp} className="w-full h-12 text-lg rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white">
-              <Send className="w-5 h-5 mr-2" /> Open WhatsApp
+            <Button onClick={sendWhatsApp} className="w-full h-14 text-lg rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white shadow-lg border-none font-bold">
+              <MessageCircle className="w-5 h-5 mr-2" /> Open WhatsApp
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={skipModal.open} onOpenChange={(o) => !o && setSkipModal({...skipModal, open: false})}>
-        <DialogContent className="sm:max-w-md w-[90%] rounded-2xl">
+        <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle>Skip Meal for {skipModal.customer?.name}</DialogTitle>
+            <DialogTitle className="text-xl font-serif">Skip Meal</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="py-4 space-y-5">
             <div className="space-y-2">
-              <Label>Skip Date</Label>
-              <Input type="date" value={skipDate} onChange={e => setSkipDate(e.target.value)} />
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Skip Date</Label>
+              <Input type="date" value={skipDate} onChange={e => setSkipDate(e.target.value)} className="h-12 rounded-xl" />
             </div>
-            <div className="p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground italic border-l-2 border-primary">
-              "This confirms your Morning Bites pack has been skipped for..."
+            <div className="p-4 bg-primary/5 rounded-xl text-sm text-primary font-medium border border-primary/20">
+              "This confirms your Morning Bites pack has been skipped..."
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSkip} className="w-full h-12 text-lg rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white shadow-lg">
-              <Send className="w-5 h-5 mr-2" /> Skip & Send WhatsApp
+            <Button onClick={handleSkip} className="w-full h-14 text-lg rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white shadow-lg border-none font-bold">
+              <MessageCircle className="w-5 h-5 mr-2" /> Confirm & Send WhatsApp
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={editModal.open} onOpenChange={(o) => !o && setEditModal({...editModal, open: false})}>
-        <DialogContent className="sm:max-w-md w-[90%] rounded-2xl">
+        <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle>Edit Subscriber</DialogTitle>
+            <DialogTitle className="text-xl font-serif">Edit Subscriber</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="py-4 space-y-5">
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input value={editName} onChange={e => setEditName(e.target.value)} />
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Name</Label>
+              <Input value={editName} onChange={e => setEditName(e.target.value)} className="h-12 rounded-xl" />
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} />
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Phone</Label>
+              <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} className="h-12 rounded-xl" />
             </div>
             <div className="space-y-2">
-              <Label>Package</Label>
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Package</Label>
               <Select value={editPkg} onValueChange={setEditPkg}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder="Select a package" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   {packages.map(p => (
-                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id.toString()} className="rounded-lg">{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-3 pt-2">
-              <Label>Payment Mode</Label>
-              <RadioGroup value={editMode} onValueChange={setEditMode} className="grid grid-cols-3 gap-2">
-                <div className="flex items-center justify-center">
+              <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Payment Mode</Label>
+              <RadioGroup value={editMode} onValueChange={setEditMode} className="grid grid-cols-3 gap-3">
+                <div className="flex">
                   <RadioGroupItem value="cash" id="e-cash" className="peer sr-only" />
-                  <Label htmlFor="e-cash" className="flex w-full items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer">Cash</Label>
+                  <Label htmlFor="e-cash" className="flex flex-1 items-center justify-center rounded-xl border-2 border-border bg-card p-3 font-semibold hover:bg-muted peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-primary cursor-pointer transition-all">Cash</Label>
                 </div>
-                <div className="flex items-center justify-center">
+                <div className="flex">
                   <RadioGroupItem value="upi" id="e-upi" className="peer sr-only" />
-                  <Label htmlFor="e-upi" className="flex w-full items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer">UPI</Label>
+                  <Label htmlFor="e-upi" className="flex flex-1 items-center justify-center rounded-xl border-2 border-border bg-card p-3 font-semibold hover:bg-muted peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-primary cursor-pointer transition-all">UPI</Label>
                 </div>
-                <div className="flex items-center justify-center">
+                <div className="flex">
                   <RadioGroupItem value="scanpay" id="e-scan" className="peer sr-only" />
-                  <Label htmlFor="e-scan" className="flex w-full items-center justify-center rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer">Scan</Label>
+                  <Label htmlFor="e-scan" className="flex flex-1 items-center justify-center rounded-xl border-2 border-border bg-card p-3 font-semibold hover:bg-muted peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 peer-data-[state=checked]:text-primary cursor-pointer transition-all">Scan</Label>
                 </div>
               </RadioGroup>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={saveEdit} className="w-full h-12 text-lg rounded-xl shadow-lg">
-              Save Changes
-            </Button>
+            <Button onClick={saveEdit} className="w-full h-14 text-lg rounded-xl shadow-lg font-bold">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
