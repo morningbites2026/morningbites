@@ -15,6 +15,7 @@ import Subscribed from "@/pages/subscribed";
 import SubReports from "@/pages/sub-reports";
 import Packages from "@/pages/packages";
 import Menu from "@/pages/menu";
+import Promotions from "@/pages/promotions";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/sub-reports" component={SubReports} />
         <Route path="/packages" component={Packages} />
         <Route path="/menu" component={Menu} />
+        <Route path="/promotions" component={Promotions} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

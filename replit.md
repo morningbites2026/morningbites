@@ -22,15 +22,42 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 A full-featured subscription management web app for a sprouts food stall. Built with React + Vite, connects directly to Supabase.
 
 **Key Features:**
-- 9-tab navigation: Dashboard, Billing, Bill Reports, Sub Dashboard, Walk-ins, Subscribed, Sub Reports, Packages, Menu
+- 10-tab navigation: Dashboard, Billing, Bill Reports, Schedule, Walk-ins, Subscribed, Sub Reports, Packages, Menu, Promotions
 - Direct Supabase integration (no backend needed)
-- WhatsApp notifications for subscriptions, skips, meal updates
+- WhatsApp notifications for subscriptions, skips, meal updates, promotions
 - UPI/QR code payment support with change calculator
-- Subscription tracking: meal usage, preferred days, skips, renewals
-- Mobile-first, responsive design
-- Green brand theme (#1a5c2a)
+- Subscription tracking: meal usage, preferred days, skips, renewals, history logs (IST timestamps)
+- Walk-ins: subscribe, promote, history, edit, soft-delete (syncs to subscribed screen)
+- Billing: Daily + Week Special menu categories; week specials filtered by day
+- Bill Reports: date-wise filter, IST timestamps, full item editing, QR for scanpay
+- Schedule: Today/Tomorrow tabs, dates in weekly grid, skipped meal alerts
+- Promotions: create, toggle active/inactive, send to walk-in customers via WhatsApp
+- Menu: Daily / Week Special tabs with per-day availability selection
+- Activity logs: all key actions tracked with IST timestamps
+- Mobile-first, responsive design, max-width 500px
+- Green brand theme (#1a5c2a / #2d8a45), amber secondary (#f5c542)
 
-**Supabase Tables:** customers, walkins, menu_items, bills, meal_skips, meal_logs, packages
+**Supabase Tables:** customers, walkins, menu_items, bills, meal_skips, packages, activity_logs, promotions
+**Required SQL migrations (run once in Supabase dashboard):**
+```sql
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id bigserial primary key,
+  customer_id bigint references customers(id),
+  action text not null,
+  description text default '',
+  meta jsonb,
+  created_at timestamptz default now()
+);
+CREATE TABLE IF NOT EXISTS promotions (
+  id bigserial primary key,
+  title text not null,
+  description text not null,
+  is_active boolean default true,
+  created_at timestamptz default now()
+);
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS category text DEFAULT 'daily';
+ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS week_days integer[] DEFAULT '{}';
+```
 
 **Environment Variables (shared):**
 - `VITE_SUPABASE_URL` — Supabase project URL

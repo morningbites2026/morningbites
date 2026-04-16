@@ -8,27 +8,54 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { dbUpd, dbDel } from "@/lib/supabase";
+import { Textarea } from "@/components/ui/textarea";
+import { dbUpd, dbDel, formatIST, UPI_ID } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash2, CalendarDays, ReceiptText, QrCode, Banknote, CreditCard } from "lucide-react";
+import { Edit, Trash2, CalendarDays, ReceiptText, QrCode, Banknote, CreditCard, Plus, Minus } from "lucide-react";
 
 export default function BillReports() {
-  const { bills, refresh } = useStore();
+  const { bills, menuItems, refresh } = useStore();
   const { toast } = useToast();
-  
+
   const [period, setPeriod] = useState("today");
-  const [editBillId, setEditBillId] = useState<number | null>(null);
-  
+  const [dateFilter, setDateFilter] = useState("");
+
+  const [editBill, setEditBill] = useState<any>(null);
   const [editName, setEditName] = useState("");
-  const [editTotal, setEditTotal] = useState("");
   const [editMode, setEditMode] = useState<any>("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editItems, setEditItems] = useState<Array<{ name: string; option: string; price: number; qty: number }>>([]);
+  const [editQrOpen, setEditQrOpen] = useState(false);
 
   const today = new Date().toLocaleDateString('en-IN');
-  
-  // Basic filtering for "today"
+
+  const getWeekStart = () => {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
+    return new Date(d.setDate(diff));
+  };
+
+  const getMonthStart = () => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  };
+
   const filteredBills = bills.filter(b => {
+    if (dateFilter) {
+      const billDate = new Date(b.created_at);
+      const filterDate = new Date(dateFilter);
+      return billDate.toDateString() === filterDate.toDateString();
+    }
     if (period === "today") return b.bill_date === today;
-    // ... add this week / this month logic if needed
+    if (period === "week") {
+      const billDate = new Date(b.created_at);
+      return billDate >= getWeekStart();
+    }
+    if (period === "month") {
+      const billDate = new Date(b.created_at);
+      return billDate >= getMonthStart();
+    }
     return true;
   });
 
@@ -38,22 +65,53 @@ export default function BillReports() {
   const scanRev = filteredBills.filter(b => b.payment_mode === 'scanpay').reduce((s, b) => s + b.total_amount, 0);
 
   const handleEditOpen = (bill: any) => {
-    setEditBillId(bill.id);
+    setEditBill(bill);
     setEditName(bill.customer_name || "");
-    setEditTotal(bill.total_amount.toString());
     setEditMode(bill.payment_mode);
+    setEditNotes(bill.notes || "");
+    setEditItems(JSON.parse(JSON.stringify(bill.items)));
+    setEditQrOpen(false);
+  };
+
+  const editTotal = editItems.reduce((s, it) => s + it.price * it.qty, 0);
+
+  const handleEditQtyChange = (idx: number, delta: number) => {
+    setEditItems(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], qty: Math.max(0, next[idx].qty + delta) };
+      return next.filter((_, i) => i === idx ? next[idx].qty > 0 : true);
+    });
+  };
+
+  const handleAddMenuItemToEdit = (menuItem: any, optIdx: number) => {
+    const opt = menuItem.options[optIdx];
+    const existing = editItems.findIndex(it => it.name === menuItem.name && it.option === opt.name);
+    if (existing >= 0) {
+      const next = [...editItems];
+      next[existing] = { ...next[existing], qty: next[existing].qty + 1 };
+      setEditItems(next);
+    } else {
+      setEditItems(prev => [...prev, { name: menuItem.name, option: opt.name, price: opt.price, qty: 1 }]);
+    }
   };
 
   const handleSaveEdit = async () => {
-    if (!editBillId) return;
+    if (!editBill) return;
+    if (editMode === 'scanpay' && !editQrOpen) {
+      setEditQrOpen(true);
+      return;
+    }
     try {
-      await dbUpd('bills', editBillId, {
+      await dbUpd('bills', editBill.id, {
         customer_name: editName || null,
-        total_amount: Number(editTotal),
-        payment_mode: editMode
+        items: editItems,
+        total_amount: editTotal,
+        payment_mode: editMode,
+        notes: editNotes || null
       });
       toast({ title: "Bill updated" });
-      setEditBillId(null);
+      setEditBill(null);
+      setEditQrOpen(false);
       refresh();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
@@ -78,25 +136,47 @@ export default function BillReports() {
     return <QrCode className="w-4 h-4 text-purple-600" />;
   };
 
+  const activeMenuItems = menuItems.filter(m => m.is_active);
+  const upiUrl = `upi://pay?pa=${UPI_ID}&pn=Morning+Bites&am=${editTotal}&cu=INR`;
+
   return (
     <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-      <h2 className="text-xl font-bold flex items-center gap-2"><ReceiptText className="w-5 h-5 text-primary" /> Bill Reports</h2>
-      
-      <Tabs value={period} onValueChange={setPeriod} className="w-full">
-        <TabsList className="w-full bg-muted/50 p-1 grid grid-cols-4 rounded-xl">
-          <TabsTrigger value="today" className="rounded-lg text-xs">Today</TabsTrigger>
-          <TabsTrigger value="week" className="rounded-lg text-xs">This Week</TabsTrigger>
-          <TabsTrigger value="month" className="rounded-lg text-xs">This Month</TabsTrigger>
-          <TabsTrigger value="all" className="rounded-lg text-xs">All Time</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <h2 className="text-xl font-bold flex items-center gap-2">
+        <ReceiptText className="w-5 h-5 text-primary" /> Bill Reports
+      </h2>
 
-      <Tabs defaultValue="summary" className="w-full mt-2">
+      <div className="space-y-2">
+        <Tabs value={period} onValueChange={v => { setPeriod(v); setDateFilter(""); }} className="w-full">
+          <TabsList className="w-full bg-muted/50 p-1 grid grid-cols-4 rounded-xl">
+            <TabsTrigger value="today" className="rounded-lg text-xs">Today</TabsTrigger>
+            <TabsTrigger value="week" className="rounded-lg text-xs">This Week</TabsTrigger>
+            <TabsTrigger value="month" className="rounded-lg text-xs">This Month</TabsTrigger>
+            <TabsTrigger value="all" className="rounded-lg text-xs">All Time</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-muted-foreground" />
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={e => { setDateFilter(e.target.value); setPeriod("all"); }}
+            className="h-9 text-sm flex-1"
+            placeholder="Filter by date"
+          />
+          {dateFilter && (
+            <Button variant="ghost" size="sm" className="h-9 px-2 text-xs" onClick={() => setDateFilter("")}>
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <Tabs defaultValue="summary" className="w-full mt-1">
         <TabsList className="w-full bg-transparent border-b border-border rounded-none p-0 h-auto justify-start gap-4">
-          <TabsTrigger value="summary" className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none px-2 py-2">Summary</TabsTrigger>
-          <TabsTrigger value="history" className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none px-2 py-2">History</TabsTrigger>
+          <TabsTrigger value="summary" className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none px-2 py-2 text-sm">Summary</TabsTrigger>
+          <TabsTrigger value="history" className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none px-2 py-2 text-sm">History ({filteredBills.length})</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="summary" className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Card className="border-border bg-primary text-primary-foreground shadow-md">
@@ -118,27 +198,25 @@ export default function BillReports() {
               <CardTitle className="text-sm">Revenue by Payment Mode</CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 font-medium"><Banknote className="w-4 h-4 text-green-600" /> Cash</div>
-                <div className="font-bold">₹{cashRev}</div>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{width: `${totalRev ? (cashRev/totalRev)*100 : 0}%`}}></div></div>
-              
-              <div className="flex justify-between items-center mt-4">
-                <div className="flex items-center gap-2 font-medium"><CreditCard className="w-4 h-4 text-blue-600" /> UPI</div>
-                <div className="font-bold">₹{upiRev}</div>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2"><div className="bg-blue-500 h-2 rounded-full" style={{width: `${totalRev ? (upiRev/totalRev)*100 : 0}%`}}></div></div>
-
-              <div className="flex justify-between items-center mt-4">
-                <div className="flex items-center gap-2 font-medium"><QrCode className="w-4 h-4 text-purple-600" /> Scan & Pay</div>
-                <div className="font-bold">₹{scanRev}</div>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2"><div className="bg-purple-500 h-2 rounded-full" style={{width: `${totalRev ? (scanRev/totalRev)*100 : 0}%`}}></div></div>
+              {[
+                { label: 'Cash', icon: <Banknote className="w-4 h-4 text-green-600" />, rev: cashRev, color: 'bg-green-500' },
+                { label: 'UPI', icon: <CreditCard className="w-4 h-4 text-blue-600" />, rev: upiRev, color: 'bg-blue-500' },
+                { label: 'Scan & Pay', icon: <QrCode className="w-4 h-4 text-purple-600" />, rev: scanRev, color: 'bg-purple-500' },
+              ].map(m => (
+                <div key={m.label} className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 font-medium">{m.icon} {m.label}</div>
+                    <div className="font-bold">₹{m.rev}</div>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div className={`${m.color} h-2 rounded-full transition-all`} style={{ width: `${totalRev ? (m.rev / totalRev) * 100 : 0}%` }}></div>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="history" className="mt-4">
           <div className="space-y-3 pb-8">
             {filteredBills.length === 0 ? (
@@ -150,8 +228,14 @@ export default function BillReports() {
               filteredBills.map(bill => (
                 <Card key={bill.id} className="border-border shadow-sm overflow-hidden">
                   <div className="p-3 bg-muted/30 flex justify-between items-center border-b border-border">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-                      <CalendarDays className="w-3 h-3" /> {bill.bill_date}
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                        <CalendarDays className="w-3 h-3" />
+                        {bill.bill_date}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground/70">
+                        {formatIST(bill.created_at)}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
                       {getModeIcon(bill.payment_mode)}
@@ -163,10 +247,12 @@ export default function BillReports() {
                       <div className="font-bold text-base">{bill.customer_name || "Walk-in"}</div>
                       <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                         {bill.items.map((it, idx) => (
-                          <div key={idx}>{it.qty}x {it.name} ({it.option})</div>
+                          <div key={idx}>{it.qty}× {it.name} ({it.option}) — ₹{it.price * it.qty}</div>
                         ))}
                       </div>
-                      {bill.notes && <div className="text-xs italic text-muted-foreground mt-2 border-l-2 border-primary/30 pl-2">"{bill.notes}"</div>}
+                      {bill.notes && (
+                        <div className="text-xs italic text-muted-foreground mt-2 border-l-2 border-primary/30 pl-2">"{bill.notes}"</div>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-3">
                       <div className="text-xl font-black text-primary">₹{bill.total_amount}</div>
@@ -187,40 +273,113 @@ export default function BillReports() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={!!editBillId} onOpenChange={(o) => !o && setEditBillId(null)}>
-        <DialogContent className="sm:max-w-md rounded-2xl w-[90%]">
+      <Dialog open={!!editBill} onOpenChange={(o) => !o && setEditBill(null)}>
+        <DialogContent className="sm:max-w-md rounded-2xl w-[92%] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Bill</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-4 h-4" /> Edit Bill
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Customer Name</Label>
-              <Input value={editName} onChange={e => setEditName(e.target.value)} />
+              <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Walk-in" />
             </div>
+
             <div className="space-y-2">
-              <Label>Total Amount (₹)</Label>
-              <Input type="number" value={editTotal} onChange={e => setEditTotal(e.target.value)} />
+              <Label>Items</Label>
+              <div className="space-y-2">
+                {editItems.map((it, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-muted/30 p-2 rounded-lg">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{it.name} ({it.option})</div>
+                      <div className="text-xs text-muted-foreground">₹{it.price} each</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={() => handleEditQtyChange(idx, -1)}>
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="w-5 text-center font-bold text-sm">{it.qty}</span>
+                      <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={() => handleEditQtyChange(idx, 1)}>
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {activeMenuItems.length > 0 && (
+              <div className="space-y-2">
+                <Label>Add Items</Label>
+                <div className="border border-border rounded-xl divide-y divide-border max-h-40 overflow-y-auto">
+                  {activeMenuItems.map(item =>
+                    item.options.map((opt, optIdx) => (
+                      <button
+                        key={`${item.id}-${optIdx}`}
+                        onClick={() => handleAddMenuItemToEdit(item, optIdx)}
+                        className="w-full flex justify-between items-center px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                      >
+                        <span className="font-medium">{item.name} ({opt.name})</span>
+                        <span className="text-primary font-bold">+ ₹{opt.price}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center py-2 border-t border-border">
+              <Label className="text-muted-foreground">New Total</Label>
+              <span className="text-2xl font-black text-primary">₹{editTotal}</span>
+            </div>
+
             <div className="space-y-2">
               <Label>Payment Mode</Label>
-              <RadioGroup value={editMode} onValueChange={setEditMode} className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="cash" id="e-cash" />
-                  <Label htmlFor="e-cash">Cash</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="upi" id="e-upi" />
-                  <Label htmlFor="e-upi">UPI</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="scanpay" id="e-scan" />
-                  <Label htmlFor="e-scan">Scan</Label>
-                </div>
+              <RadioGroup value={editMode} onValueChange={setEditMode} className="grid grid-cols-3 gap-2">
+                {['cash', 'upi', 'scanpay'].map(m => (
+                  <div key={m}>
+                    <RadioGroupItem value={m} id={`em-${m}`} className="peer sr-only" />
+                    <Label htmlFor={`em-${m}`} className="flex items-center justify-center rounded-xl border-2 border-muted bg-popover p-2.5 hover:bg-accent peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary cursor-pointer transition-all text-xs font-semibold capitalize">
+                      {m === 'scanpay' ? 'Scan' : m}
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Edit Notes / Description</Label>
+              <Textarea
+                value={editNotes}
+                onChange={e => setEditNotes(e.target.value)}
+                placeholder="Add a note about this edit..."
+                className="resize-none"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveEdit} className="w-full h-12 rounded-xl text-lg">Save Changes</Button>
+            <Button onClick={handleSaveEdit} className="w-full h-12 rounded-xl text-base font-bold">
+              {editMode === 'scanpay' && !editQrOpen ? "Show QR & Save" : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editQrOpen} onOpenChange={setEditQrOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl w-[90%] text-center p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-serif text-center">Scan & Pay</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="text-3xl font-black text-primary">₹{editTotal}</div>
+            <div className="p-3 bg-white rounded-2xl border">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`} alt="QR" className="w-40 h-40" />
+            </div>
+          </div>
+          <DialogFooter className="flex-col gap-2">
+            <Button className="w-full h-12 rounded-xl font-bold" onClick={handleSaveEdit}>Payment Done – Save Bill</Button>
+            <Button variant="outline" className="w-full h-12 rounded-xl" onClick={() => setEditQrOpen(false)}>Back</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

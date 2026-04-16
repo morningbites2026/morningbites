@@ -11,7 +11,17 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const UPI_ID = import.meta.env.VITE_UPI_ID as string || 'mansisheth174-1@oksbi';
 
-// ─── Helper types matching Supabase tables ───
+export function formatIST(isoStr: string): string {
+  try {
+    return new Date(isoStr).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+  } catch {
+    return isoStr;
+  }
+}
 
 export interface Customer {
   id: number;
@@ -47,6 +57,8 @@ export interface MenuItem {
   options: Array<{ name: string; price: number }>;
   sort_order: number;
   is_active: boolean;
+  category: 'daily' | 'week_special';
+  week_days: number[];
   created_at: string;
 }
 
@@ -79,7 +91,22 @@ export interface Package {
   created_at: string;
 }
 
-// ─── DB helpers ───
+export interface ActivityLog {
+  id: number;
+  customer_id: number | null;
+  action: string;
+  description: string;
+  meta: any;
+  created_at: string;
+}
+
+export interface Promotion {
+  id: number;
+  title: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+}
 
 export async function dbGet<T>(table: string, query?: string): Promise<T[]> {
   const url = `${supabaseUrl}/rest/v1/${table}?${query || 'select=*'}&order=created_at.desc`;
@@ -143,5 +170,26 @@ export async function dbDel(table: string, id: number): Promise<void> {
   if (!r.ok) {
     const text = await r.text();
     throw new Error(text);
+  }
+}
+
+export async function logActivity(customerId: number | null, action: string, description: string, meta?: any): Promise<void> {
+  try {
+    await dbIns('activity_logs', {
+      customer_id: customerId,
+      action,
+      description,
+      meta: meta || null,
+    });
+  } catch (e) {
+    console.warn('Activity log skipped (table may not exist yet):', e);
+  }
+}
+
+export async function getActivityLogs(customerId: number): Promise<ActivityLog[]> {
+  try {
+    return await dbGet<ActivityLog>('activity_logs', `select=*&customer_id=eq.${customerId}`);
+  } catch {
+    return [];
   }
 }
