@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { dbIns, dbUpd, dbDel, logActivity, getActivityLogs, formatIST, ActivityLog } from "@/lib/supabase";
+import { dbIns, dbUpd, logActivity, getActivityLogs, formatIST, ActivityLog, UPI_ID } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, MessageCircle, Edit, Trash2, Search, CalendarDays, History, Megaphone, QrCode, Banknote, CreditCard } from "lucide-react";
-import { UPI_ID } from "@/lib/supabase";
+import { Plus, MessageCircle, Edit, Trash2, Search, CalendarDays, History, Megaphone, QrCode, Banknote, CreditCard, RefreshCw } from "lucide-react";
 
 export default function Walkins() {
   const { walkins, customers, packages, promotions, refresh, searchQuery } = useStore();
@@ -52,6 +51,7 @@ export default function Walkins() {
   const subChange = subCashNum - subTotal;
   const upiUrl = `upi://pay?pa=${UPI_ID}&pn=Morning+Bites&am=${subTotal}&cu=INR`;
 
+  // ─── Add / Edit Walk-in ───────────────────────────────────────────────────
   const handleSaveWalkin = async () => {
     if (!name.trim() || !phone.trim()) return toast({ variant: "destructive", description: "Name and phone required" });
     try {
@@ -59,16 +59,18 @@ export default function Walkins() {
         await dbUpd('walkins', editingId, { name, phone });
         const cust = getCustomerForPhone(phone);
         if (cust) await dbUpd('customers', cust.id, { name, phone });
-        await logActivity(cust?.id || null, 'edit', `Walk-in info updated: ${name} / ${phone}`);
+        logActivity(cust?.id || null, 'edit', `Walk-in info updated: ${name} / ${phone}`);
         toast({ title: "Walk-in updated" });
       } else {
+        // Open WhatsApp FIRST (before any await) so browser allows the popup
+        const msg = `Hello ${name}! 🌱\n\nThank you for visiting Morning Bites today! We're happy to serve you fresh, healthy sprouts food every morning.\n\nWould you like to know about our subscription packs? Ask us in store or reply to this message!\n\nMorning Bites 🌿`;
+        window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
         const today = new Date().toISOString().split('T')[0];
         await dbIns('walkins', { name, phone, visit_date: today, is_deleted: false });
         const cust = getCustomerForPhone(phone);
-        await logActivity(cust?.id || null, 'walkin_added', `New walk-in registered: ${name}`);
+        logActivity(cust?.id || null, 'walkin_added', `New walk-in registered: ${name}`);
         toast({ title: "Walk-in added" });
-        const msg = `Hello ${name}! 🌱\n\nThank you for visiting Morning Bites today! We're happy to serve you fresh, healthy sprouts food every morning.\n\nWould you like to know about our subscription packs? Ask us in store or reply to this message!\n\nMorning Bites 🌿`;
-        window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
       }
       setIsWalkinModalOpen(false);
       refresh();
@@ -77,6 +79,7 @@ export default function Walkins() {
     }
   };
 
+  // ─── Subscribe / Renew ───────────────────────────────────────────────────
   const handleOpenSubscribe = (w: any) => {
     setSubWalkin(w);
     if (activePackages.length > 0) setSubPkgId(activePackages[0].id.toString());
@@ -92,68 +95,91 @@ export default function Walkins() {
       setSubQrOpen(true);
       return;
     }
+
+    const pkg = activePackages.find(p => p.id.toString() === subPkgId);
+    const existingCust = getCustomerForPhone(subWalkin.phone);
+    const today = new Date().toISOString().split('T')[0];
+
+    // Open WhatsApp FIRST before any await
+    const msg = `Hello ${subWalkin.name}! 🌱\n\nYour Sprouts Salad subscription is now active! 🎉\n\nPack: ${pkg?.name || '10 Meals'}\n✅ 10 fresh meals ready for you\n💰 ₹${pkg?.price || 0} paid via ${subPayMode}\n\nThank you for subscribing! See you every morning.\n\nMorning Bites 🌿`;
+    window.open(`https://wa.me/91${subWalkin.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const existingCust = getCustomerForPhone(subWalkin.phone);
       let custId: number | null = null;
 
-      if (existingCust && existingCust.status === 'cancelled') {
+      if (existingCust) {
+        // Already exists (active or cancelled) → treat as renewal / package change
         await dbUpd('customers', existingCust.id, {
-          status: 'active', used: 0, total: 10,
+          status: 'active',
+          used: 0,
+          total: 10,
           renew_count: existingCust.renew_count + 1,
-          last_renewed: today, pack_start_date: today,
-          package_id: Number(subPkgId), payment_mode: subPayMode
+          last_renewed: today,
+          pack_start_date: today,
+          package_id: Number(subPkgId),
+          payment_mode: subPayMode
         });
         custId = existingCust.id;
-      } else if (!existingCust) {
+      } else {
+        // New customer
         const res = await dbIns<any>('customers', {
-          name: subWalkin.name, phone: subWalkin.phone,
-          type: 'subscribed', total: 10, used: 0,
-          join_date: today, renew_count: 0, pack_start_date: today,
-          status: 'active', is_deleted: false,
-          preferred_days: [], package_id: Number(subPkgId), payment_mode: subPayMode
+          name: subWalkin.name,
+          phone: subWalkin.phone,
+          type: 'subscribed',
+          total: 10,
+          used: 0,
+          join_date: today,
+          renew_count: 0,
+          pack_start_date: today,
+          status: 'active',
+          is_deleted: false,
+          preferred_days: [],
+          package_id: Number(subPkgId),
+          payment_mode: subPayMode
         });
         custId = res[0]?.id || null;
-      } else {
-        toast({ variant: "destructive", description: "Customer already has an active subscription" });
-        return;
       }
 
-      const pkg = activePackages.find(p => p.id.toString() === subPkgId);
-      await logActivity(custId, 'subscribed', `Subscribed to ${pkg?.name || 'package'} for ₹${pkg?.price || 0}. Payment: ${subPayMode}`);
+      logActivity(custId, existingCust ? 'renewed' : 'subscribed', `${existingCust ? 'Renewed' : 'Subscribed'} to ${pkg?.name || 'package'} for ₹${pkg?.price || 0}. Payment: ${subPayMode}`);
 
-      toast({ title: "Subscribed successfully!" });
+      toast({ title: existingCust ? "Pack renewed successfully!" : "Subscribed successfully!" });
       setIsSubModalOpen(false);
       setSubQrOpen(false);
       refresh();
-
-      const msg = `Hello ${subWalkin.name}! 🌱\n\nYour Sprouts Salad subscription is now active! 🎉\n\nPack: ${pkg?.name || '10 Meals'}\n✅ 10 fresh meals ready for you\n💰 ₹${pkg?.price || 0} paid via ${subPayMode}\n\nThank you for subscribing! See you every morning.\n\nMorning Bites 🌿`;
-      window.open(`https://wa.me/91${subWalkin.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
   };
 
+  // ─── Promote ─────────────────────────────────────────────────────────────
   const handleOpenPromote = (w: any) => {
     setPromoteWalkin(w);
     setSelectedPromoId(activePromotions.length > 0 ? activePromotions[0].id.toString() : "");
   };
 
-  const handleSendPromotion = async () => {
+  const handleSendPromotion = () => {
     if (!promoteWalkin) return;
     const promo = activePromotions.find(p => p.id.toString() === selectedPromoId);
-    if (!promo && activePromotions.length > 0) return toast({ variant: "destructive", description: "Select a promotion" });
+    if (!promo && activePromotions.length > 0) {
+      toast({ variant: "destructive", description: "Please select a promotion" });
+      return;
+    }
 
     const msg = promo
       ? `Hello ${promoteWalkin.name}! 🌱\n\n${promo.title}\n\n${promo.description}\n\nMorning Bites 🌿`
       : `Hello ${promoteWalkin.name}! 🌱\n\nWe're Morning Bites – your daily sprouts & healthy snack stall.\n\n✅ Get 10 fresh meals\n🍃 Healthy food every morning\n\nInterested? Visit us or reply to subscribe!\n\nMorning Bites 🌿`;
 
-    const cust = getCustomerForPhone(promoteWalkin.phone);
-    await logActivity(cust?.id || null, 'promotion_sent', `Promotion sent: ${promo?.title || 'General promotion'}`);
+    // Open WhatsApp synchronously — no await before this
     window.open(`https://wa.me/91${promoteWalkin.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    // Log in background (no await needed)
+    const cust = getCustomerForPhone(promoteWalkin.phone);
+    logActivity(cust?.id || null, 'promotion_sent', `Promotion sent: ${promo?.title || 'General promotion'}`);
+
     setPromoteWalkin(null);
   };
 
+  // ─── History ─────────────────────────────────────────────────────────────
   const handleOpenHistory = async (w: any) => {
     setHistoryWalkin(w);
     setHistoryLoading(true);
@@ -167,6 +193,7 @@ export default function Walkins() {
     setHistoryLoading(false);
   };
 
+  // ─── Delete ──────────────────────────────────────────────────────────────
   const handleDelete = async (id: number) => {
     if (confirm("Delete this walk-in?")) {
       try {
@@ -175,7 +202,7 @@ export default function Walkins() {
         const cust = w ? getCustomerForPhone(w.phone) : null;
         if (cust) {
           await dbUpd('customers', cust.id, { is_deleted: true });
-          await logActivity(cust.id, 'deleted', 'Customer deleted (soft)');
+          logActivity(cust.id, 'deleted', 'Customer deleted (soft)');
         }
         toast({ title: "Deleted from walk-ins and subscriptions" });
         refresh();
@@ -234,11 +261,18 @@ export default function Walkins() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border">
-                    {!isSubbed && (
-                      <Button className="flex-1 min-w-[120px] rounded-xl h-10 font-bold text-[13px] shadow-sm" onClick={() => handleOpenSubscribe(w)}>
-                        Subscribe
-                      </Button>
-                    )}
+                    {/* Always show Subscribe/Renew — supports assigning any package at any time */}
+                    <Button
+                      className={`flex-1 min-w-[120px] rounded-xl h-10 font-bold text-[13px] shadow-sm ${isSubbed ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90' : ''}`}
+                      onClick={() => handleOpenSubscribe(w)}
+                      variant={isSubbed ? "outline" : "default"}
+                    >
+                      {isSubbed
+                        ? <><RefreshCw className="w-4 h-4 mr-1.5" /> Renew Pack</>
+                        : <><Plus className="w-4 h-4 mr-1" /> Subscribe</>
+                      }
+                    </Button>
+
                     <Button
                       variant="outline"
                       className="flex-1 min-w-[80px] rounded-xl h-10 font-bold text-[13px] border-secondary/50 text-secondary-foreground bg-secondary/10 hover:bg-secondary/20"
@@ -281,6 +315,7 @@ export default function Walkins() {
         )}
       </div>
 
+      {/* Add / Edit Walk-in Modal */}
       <Dialog open={isWalkinModalOpen} onOpenChange={setIsWalkinModalOpen}>
         <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
@@ -298,7 +333,7 @@ export default function Walkins() {
             {!editingId && (
               <div className="p-3 bg-green-50 rounded-xl text-xs text-green-800 border border-green-200 flex items-start gap-2">
                 <MessageCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>A welcome WhatsApp message will be sent to the customer after saving.</span>
+                <span>WhatsApp will open immediately on save to send a welcome message.</span>
               </div>
             )}
           </div>
@@ -310,10 +345,15 @@ export default function Walkins() {
         </DialogContent>
       </Dialog>
 
+      {/* Subscribe / Renew Modal */}
       <Dialog open={isSubModalOpen} onOpenChange={v => { setIsSubModalOpen(v); if (!v) setSubQrOpen(false); }}>
         <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-xl font-serif">Subscribe {subWalkin?.name}</DialogTitle>
+            <DialogTitle className="text-xl font-serif">
+              {getCustomerForPhone(subWalkin?.phone || '')?.status === 'active'
+                ? `Renew Pack — ${subWalkin?.name}`
+                : `Subscribe — ${subWalkin?.name}`}
+            </DialogTitle>
           </DialogHeader>
           {subQrOpen ? (
             <div className="flex flex-col items-center gap-4 py-4">
@@ -330,6 +370,12 @@ export default function Walkins() {
           ) : (
             <>
               <div className="space-y-6 py-4">
+                {getCustomerForPhone(subWalkin?.phone || '')?.status === 'active' && (
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800">
+                    ⚡ This customer already has an active pack. Assigning a new package will reset their count and start fresh (renewal).
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Select Package</Label>
                   <Select value={subPkgId} onValueChange={setSubPkgId}>
@@ -389,7 +435,7 @@ export default function Walkins() {
               </div>
               <DialogFooter>
                 <Button onClick={handleSubscribe} className="w-full h-14 text-lg rounded-xl shadow-lg font-bold">
-                  {subPayMode === 'scanpay' ? 'Show QR & Activate' : 'Activate Package'}
+                  {subPayMode === 'scanpay' ? 'Show QR & Activate' : getCustomerForPhone(subWalkin?.phone || '')?.status === 'active' ? 'Renew Pack' : 'Activate Package'}
                 </Button>
               </DialogFooter>
             </>
@@ -397,6 +443,7 @@ export default function Walkins() {
         </DialogContent>
       </Dialog>
 
+      {/* Promote Modal */}
       <Dialog open={!!promoteWalkin} onOpenChange={v => !v && setPromoteWalkin(null)}>
         <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6">
           <DialogHeader>
@@ -436,6 +483,7 @@ export default function Walkins() {
         </DialogContent>
       </Dialog>
 
+      {/* History Modal */}
       <Dialog open={!!historyWalkin} onOpenChange={v => !v && setHistoryWalkin(null)}>
         <DialogContent className="sm:max-w-md w-[95%] rounded-3xl p-6 max-h-[80vh] overflow-y-auto">
           <DialogHeader>

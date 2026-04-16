@@ -90,12 +90,20 @@ export default function Subscribed() {
   const handleAddCustomer = async () => {
     if (!addName.trim() || !addPhone.trim() || !addPkgId) return toast({ variant: "destructive", description: "All fields required" });
     if (addPayMode === 'scanpay' && !addQrOpen) { setAddQrOpen(true); return; }
+
+    const pkg = selectedAddPkg;
+
+    // Open WhatsApp FIRST (before any await) so browser allows the popup
+    const msg = `Hello ${addName}! 🌱\n\nYour Sprouts Salad subscription is now active! 🎉\n\nPack: ${pkg?.name || '10 Meals'}\n✅ 10 fresh meals ready for you\n💰 ₹${pkg?.price || 0} paid via ${addPayMode}\n\nThank you for subscribing! See you every morning.\n\nMorning Bites 🌿`;
+    window.open(`https://wa.me/91${addPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+
     try {
       const today = new Date().toISOString().split('T')[0];
       const existingCust = customers.find(c => c.phone === addPhone);
       let custId: number | null = null;
 
-      if (existingCust && existingCust.status === 'cancelled') {
+      if (existingCust) {
+        // Existing customer (active or cancelled) → treat as renewal / package change
         await dbUpd('customers', existingCust.id, {
           name: addName, status: 'active', used: 0, total: 10,
           renew_count: existingCust.renew_count + 1,
@@ -103,7 +111,7 @@ export default function Subscribed() {
           package_id: Number(addPkgId), payment_mode: addPayMode
         });
         custId = existingCust.id;
-      } else if (!existingCust) {
+      } else {
         const res = await dbIns<any>('customers', {
           name: addName, phone: addPhone, type: 'subscribed',
           total: 10, used: 0, join_date: today, renew_count: 0,
@@ -112,22 +120,15 @@ export default function Subscribed() {
         });
         custId = res[0]?.id || null;
         await dbIns('walkins', { name: addName, phone: addPhone, visit_date: today, is_deleted: false });
-      } else {
-        toast({ variant: "destructive", description: "Customer already has an active subscription" });
-        return;
       }
 
-      const pkg = selectedAddPkg;
-      await logActivity(custId, 'subscribed', `Subscribed to ${pkg?.name || 'package'} for ₹${pkg?.price || 0}. Payment: ${addPayMode}`);
+      logActivity(custId, existingCust ? 'renewed' : 'subscribed', `${existingCust ? 'Renewed' : 'Subscribed'} to ${pkg?.name || 'package'} for ₹${pkg?.price || 0}. Payment: ${addPayMode}`);
 
-      toast({ title: "Customer added and subscribed!" });
+      toast({ title: existingCust ? "Pack renewed!" : "Customer added and subscribed!" });
       setAddModal(false);
       setAddQrOpen(false);
       setAddName(""); setAddPhone(""); setAddPkgId(""); setAddPayMode("cash"); setAddCash("");
       refresh();
-
-      const msg = `Hello ${addName}! 🌱\n\nYour Sprouts Salad subscription is now active! 🎉\n\nPack: ${pkg?.name || '10 Meals'}\n✅ 10 fresh meals ready for you\n\nThank you for subscribing! See you every morning.\n\nMorning Bites 🌿`;
-      window.open(`https://wa.me/91${addPhone}?text=${encodeURIComponent(msg)}`, '_blank');
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
@@ -165,6 +166,12 @@ export default function Subscribed() {
 
   const handleRenew = async (c: any) => {
     if (!confirm(`Renew pack for ${c.name}?`)) return;
+
+    // Open WhatsApp FIRST before any await
+    const pkg = packages.find(p => p.id === c.package_id);
+    const msg = `Hello ${c.name}! 🔄\n\nGreat news — your Morning Bites pack has been renewed! 🎉\n\n✅ 10 fresh meals ready again\n📦 Pack #${c.renew_count + 1}\n\nSee you every morning!\n\nMorning Bites 🌿`;
+    window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
     try {
       const today = new Date().toISOString().split('T')[0];
       await dbUpd('customers', c.id, {
@@ -172,13 +179,9 @@ export default function Subscribed() {
         renew_count: c.renew_count + 1,
         last_renewed: today, pack_start_date: today, status: 'active'
       });
-      const pkg = packages.find(p => p.id === c.package_id);
-      await logActivity(c.id, 'renewed', `Pack renewed (×${c.renew_count + 1}). Package: ${pkg?.name || 'unknown'}`);
+      logActivity(c.id, 'renewed', `Pack renewed (×${c.renew_count + 1}). Package: ${pkg?.name || 'unknown'}`);
       toast({ title: "Pack renewed successfully!" });
       refresh();
-
-      const msg = `Hello ${c.name}! 🔄\n\nGreat news — your Morning Bites pack has been renewed! 🎉\n\n✅ 10 fresh meals ready again\n📦 Pack #${c.renew_count + 1}\n\nSee you every morning!\n\nMorning Bites 🌿`;
-      window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank');
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
@@ -191,20 +194,22 @@ export default function Subscribed() {
   const handleConfirmCancel = async (sendReturn: boolean) => {
     const c = cancelModal.customer;
     if (!c) return;
+
+    // Open WhatsApp FIRST before any await
+    if (sendReturn) {
+      const pkg = packages.find(p => p.id === c.package_id);
+      const pricePerMeal = pkg ? Math.round(pkg.price / 10) : 0;
+      const refundAmount = (c.total - c.used) * pricePerMeal;
+      const msg = `Hello ${c.name},\n\nYour Morning Bites subscription has been cancelled.\n\n📊 Meals Used: ${c.used}/${c.total}\n💰 Refund Amount: ₹${refundAmount} (${c.total - c.used} meals × ₹${pricePerMeal})\n\nWe hope to see you again! 🌿\n\nMorning Bites`;
+      window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
     try {
       await dbUpd('customers', c.id, { status: 'cancelled' });
-      await logActivity(c.id, 'cancelled', `Subscription cancelled. ${c.total - c.used} meals remaining.`);
+      logActivity(c.id, 'cancelled', `Subscription cancelled. ${c.total - c.used} meals remaining.`);
       toast({ title: "Subscription cancelled" });
       setCancelModal({ open: false, customer: null });
       refresh();
-
-      if (sendReturn) {
-        const pkg = packages.find(p => p.id === c.package_id);
-        const pricePerMeal = pkg ? Math.round(pkg.price / 10) : 0;
-        const refundAmount = (c.total - c.used) * pricePerMeal;
-        const msg = `Hello ${c.name},\n\nYour Morning Bites subscription has been cancelled.\n\n📊 Meals Used: ${c.used}/${c.total}\n💰 Refund Amount: ₹${refundAmount} (${c.total - c.used} meals × ₹${pricePerMeal})\n\nWe hope to see you again! 🌿\n\nMorning Bites`;
-        window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank');
-      }
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     }
@@ -243,14 +248,17 @@ export default function Subscribed() {
   const handleSkip = async () => {
     const c = skipModal.customer;
     if (!c || !skipDate) return;
+
+    // Open WhatsApp FIRST before any await
+    const d = new Date(skipDate);
+    const dayName = d.toLocaleDateString('en-IN', { weekday: 'long' });
+    const dateStr = d.toLocaleDateString('en-IN');
+    const msg = `Hello ${c.name},\n\nConfirmed — your Morning Bites pack is skipped for:\n\n📅 ${dayName}, ${dateStr}\n\nYour remaining meals stay the same. See you on your next day!\n\nMorning Bites 🌿`;
+    window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
     try {
       await dbIns('meal_skips', { customer_id: c.id, skip_date: skipDate, notified: true, unskipped: false });
-      await logActivity(c.id, 'meal_skipped', `Meal skipped for ${skipDate}`);
-      const d = new Date(skipDate);
-      const dayName = d.toLocaleDateString('en-IN', { weekday: 'long' });
-      const dateStr = d.toLocaleDateString('en-IN');
-      const msg = `Hello ${c.name},\n\nConfirmed — your Morning Bites pack is skipped for:\n\n📅 ${dayName}, ${dateStr}\n\nYour remaining meals stay the same. See you on your next day!\n\nMorning Bites 🌿`;
-      window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+      logActivity(c.id, 'meal_skipped', `Meal skipped for ${skipDate}`);
       setSkipModal({ open: false, customer: null });
       toast({ title: "Meal skipped & WhatsApp opened" });
       refresh();
