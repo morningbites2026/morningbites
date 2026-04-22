@@ -1,0 +1,108 @@
+Missing feature 
+1. One feature missing : Still i am not able assign multiple package to existing and new customer. 
+
+I want this feature: Because a customer who want two packages 1. So with below scenario I can provide.
+
+2. At a time of adding customer from walk-in or from Subscription, Add new customer show select package (but here I can select multiple packages.
+
+3. If customer already having 1 pack subscription and they want to add 1 more package, then from Edit customer feature (Walk-in and Subscribe both screen) I can add one more packge for them. 
+
+Other around functionality 
+1. Packeage tracking should work for all opted packages along with history.
+2. All opted packges should show for each customer, based on package selection tracking information should display. 
+For example right now, Sprouts salad tag we are showing,  Same tag moved above the number left meal (right top side of each customer). If multiple packages associated with customer then that lable turn into dropdown for switching the packing tracking information. 
+
+Bug : 
+
+1. Billing report > history  : Date and Timestamp not as per the IST
+2. Billing report > history > Edit bill : UI for adding new items looks very bad, items repeat multiple time, can you please rander same like Billing screen?
+3. Menu > Add item : By default zero (0) rs, it's shows but I can not remove it. For example I want add price as 10, then First I have to 010, and then I can remove 1st zero for making amount 10. So please fix it I should able to remove zero 
+4. Entier application should work in IST 
+5. Subscribied : Cancel and Delete button having a same icon, it's should be different.
+6. Subscribied :Notify buttton > Remove text Notify and just keep icon as it as. So every button will come in single line.
+7. Sub reports : This page should only states for "Number of packages, Total subscribied, Newly Subscribied, Active Packs customer, Renew customer, Meal served till the date"
+8. After generating bill, page scroll to top 
+
+Enhancement
+1. Subscribied : I set the Skip meal for any date for customer, But supposed I want remove that skip for that date so I don't have functionality for that. So please improve.
+
+2. Skip for the particular date should work only the current on going meal cycle. If customer renew the package then all schedule skip date should reset. And renew happing from Walk-in screen as well as from Subscribied. So this should work from both the places.
+
+3. Schedule : Under the Weekly Overview, the count come day wise those are wrong. It's should not consider skip meal. 
+
+4. Promotions : At a time of creating new promotion, I should be able to format the text and browse and attached the image. 
+It's batter, If I can create promotion through the AI. Like I provide small matter for promotion and AI suggest me promotion content, same way If i provide Image so based on that AI will generate the promotation content. 
+
+5. Packages : Add package should have fields like "Package Name, Number of meal , Price & Description". On same page Edit package functionality is not there so please provide that too. 
+6. Packages : From the list, I should able to inactive and active package, but make sure if I inactive any package then it's not create any problem for those customer who having that pack running.
+
+7. In menu : I created menu in past and there are some dublicate items like Thepla with variant, then Sev Pratha & Sev Paratha. So merge those data remove unnessary items. But yes make sure it's should impact other areas like Billing and reports.  
+
+Use following message template for all below events. 
+1. Use meal & meal update
+
+Hello testsub,
+
+Here is your Morning Bites meal update:
+✅ Meals used so far: 0
+🥗 Meals remaining: 10
+📦 Total meals in pack: 10
+
+Enjoy your fresh sprouts every morning and stay healthy!
+
+Timing: 6:30 AM to 9:00 AM
+Call us: 9099172237 / 9429929822
+
+Thank you,
+Morning Bites 🌿
+
+2. Renew pack 
+Hello testsub,
+
+You currently have 2 meal(s) remaining.
+
+Renew your pack today!
+🎉 10 fresh sprout meals for just ₹350 (Save ₹50!)
+
+📍 Akota Garden, Vadodara
+⏰ 6:30 AM to 9:00 AM
+📞 9099172237 / 9429929822
+
+Thank you,
+Morning Bites 🌿
+
+3. Pack done
+Hello testsub,
+
+All 10 meals have been used.
+
+Renew today!
+🎉 10 fresh sprout meals for just ₹350!
+
+📍 Akota Garden, Vadodara
+⏰ 6:30 AM to 9:00 AM
+📞 9099172237 / 9429929822
+
+Thank you,
+Morning Bites 🌿
+
+4. Active subscription 
+Hello Test,
+
+Welcome to Morning Bites! 🌿
+
+Your Sprouts Salad subscription is now active!
+
+📦 Pack: 10 meals
+💰 Amount: ₹350
+📅 Start date: 16/4/2026
+
+Enjoy fresh sprouts daily!
+✅ Healthy • Hygienic • Tasty
+
+📍 Akota Garden, Near Radha Krishan Circle, Akota, Vadodara
+⏰ 6:30 AM to 9:00 AM
+📞 9099172237 / 9429929822
+
+See you tomorrow morning!
+Morning Bites 🌿
