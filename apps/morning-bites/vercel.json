@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter ./apps/morning-bites build",
-  "outputDirectory": "apps/morning-bites/dist/public"
+  "buildCommand": "pnpm --filter ./apps/morning-bites build && node -e \"const fs=require('fs'); const path=require('path'); const src=path.resolve('apps/morning-bites/dist/public'); const dest=path.resolve('public'); if (!fs.existsSync(src)) { console.error('Missing build output at ' + src); process.exit(1); } fs.rmSync(dest,{recursive:true,force:true}); fs.cpSync(src,dest,{recursive:true}); console.log('Prepared Vercel output at ' + dest);\"",
+  "outputDirectory": "public"
 }
