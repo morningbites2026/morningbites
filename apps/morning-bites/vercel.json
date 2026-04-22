@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter ./apps/morning-bites build",
+  "outputDirectory": "apps/morning-bites/dist/public"
+}
